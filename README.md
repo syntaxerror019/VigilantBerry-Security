@@ -29,9 +29,19 @@ Configuring VigilantBerry is a breeze! With a user-friendly interface, you can s
 
 VigilantBerry is designed to be straightforward and user-friendly. Whether you're a beginner or an experienced tech enthusiast, you'll find it easy to set up and start using.
 
+### Installation
+To begin, run the following commands to update your system:
+```bash
+sudo apt update
+sudo apt upgrade -y
+```
+Once the commands finish executing, run this command to use the "GUI" installation:
+
+
 ### Future Features 🌈
 Future updates may include:
 - Integration with smart home systems 🏠
+- Auto updating features for software
 - Cloud storage options ☁️
 
 ## Contributing 🤝
