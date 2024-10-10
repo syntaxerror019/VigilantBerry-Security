@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>VigiBerry</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500&display=swap" rel="stylesheet">
+</head>
+<body>
+    <script>0</script>
+    <div class="header">
+        <div class="logo">
+            <h2>VigilantBerry</h2>
+        </div>
+        <div class="hamburger">
+            <i class="fas fa-bars"></i>
+        </div>
+    </div>
+    <div class="sidebar">
+        <div class="logo">
+            <h2>VigilantBerry</h2>
+        </div>
+        <ul class="nav-tabs">
+            <li><a href="#setup"><i class="fas fa-info-circle"></i>Initial Setup</a></li>
+            <li><a href="#help"><i class="fas fa-question-circle"></i>Additional Help</a></li>
+        </ul>
+    </div>
+    <div id="notification" class="notification hidden">
+        <span>There was an error loading the error message.</span>
+        <close id="closeBtn" class="close-btn">×</close>
+    </div>
+    <div class="content">
+        <div id="setup" class="tab-content">
+            <div class="section" id="intro">
+                <h2>Welcome to VigilantBerry! 🙌</h2>
+                <hr>
+                <p>Please complete this quick setup wizard to get up-and-running in no time! 👍</p>
+                <br>
+                <button onclick="next('intro', 'cameras')">Continue</button>
+        </div>
+
+        <div class="section hidden" id="cameras">
+            <h3>Camera configuration 2 / 3 📷</h3>
+            <hr>
+            <p>Please select the cameras to be used for recording. You may change this any time under the 'Settings' tab.</p>
+            <hr>
+            <hr>
+            {% for camera in cameras %}
+                <label>
+                    <input class="camera-checkbox" id="{{ camera['name'] }}" type="checkbox" name="camera" value="{{ camera['index'] }}"> <b>✅ Use this camera: </b>
+                    <label for="{{ camera['name'] }}">Camera {{ camera['index'] }}; Resolution: {{camera['frame_width']}}x{{camera['frame_height']}}</label>
+                </label><hr>
+            {% endfor %}
+            <hr>
+            <hr>
+            <button onclick="next('cameras', 'general')">Continue</button>
+        </div>
+
+        <div class="section hidden" id="general">
+            <h3>Storage configuration 3 / 3 📂</h3>
+            <hr>
+            <p>Folder path as to where the footage should be recorded and saved.</p>
+            <p><b>DO NOT adjust this unless you know what to do.</b></p>
+            <p>In most cases, the default path is where you want footage to be stored.</p>
+            <br>
+            <label for="storage-path">⛔ Storage Path:</label>
+            <input type="text" id="storage-path" name="storage-path" value="{{ default_location }}"></input>
+            <br>
+            <br>
+            <button onclick="check_path()">Finish</button>
+        </div>
+        </div>
+        <div id="help" class="tab-content">
+            <h2>Need assitance? 🯄</h2>
+            <p>E-Mail: <a href="mailto:sntx@sntx.dev">sntx@sntx.dev</a></p>
+            <hr>
+        </div>
+    </div>
+    <script src="{{ url_for('static', filename='script.js') }}"></script>
+</body>
+</html>

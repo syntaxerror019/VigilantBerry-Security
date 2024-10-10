@@ -1,0 +1,191 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SVigiBerry</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500&display=swap" rel="stylesheet">
+</head>
+
+<body>
+    <script>0</script>
+    <div class="header">
+        <div class="logo">
+            <h2>VigilantBerry</h2>
+        </div>
+        <div class="hamburger">
+            <i class="fas fa-bars"></i>
+        </div>
+    </div>
+    <div class="sidebar">
+        <div class="logo">
+            <h2>VigilantBerry</h2>
+        </div>
+        <ul class="nav-tabs">
+            <li><a href="#cameras"><i class="fas fa-video"></i> Cameras</a></li>
+            <li><a href="#settings"><i class="fas fa-cog"></i> Settings</a></li>
+            <li><a href="#footage"><i class="fas fa-film"></i> Footage</a></li>
+            <li><a href="#pictures"><i class="fas fa-image"></i> Pictures</a></li>
+            <li><a href="#about"><i class="fas fa-info-circle"></i> About</a></li>
+        </ul>
+    </div>
+    <div id="notification" class="notification hidden">
+        <span>There was an error loading the error message.</span>
+        <close id="closeBtn" class="close-btn">×</close>
+    </div>
+    <div class="content">
+        <div id="cameras" class="tab-content camera-container">
+            <h2>Cameras</h2>
+            {% for camera in cameras %}
+            <div class="camera">
+                <h3>{{ camera['name'] }}</h3>
+                <img class="img-frame" src="/video_feed/{{ camera['index'] }}" alt="{{ camera['name'] }}">
+                <p class="subtext">Resolution: {{ camera['frame_width'] }}x{{ camera['frame_height'] }}; FPS: {{
+                    camera['fps'] }}</p>
+            </div>
+            {% endfor %}
+        </div>
+        <div id="settings" class="tab-content">
+            <h2>Settings</h2>
+            {% for camera in cameras %}
+            <div class="camera-setting-form">
+                <form class="cameraForm" action="/save_camera/{{ camera['index'] }}" method="POST">
+                    <h3>Camera {{ camera['index'] }} - {{ camera['name'] }}</h3>
+                    <p>Resolution: {{ camera['frame_width'] }}x{{ camera['frame_height'] }}; FPS: {{ camera['fps'] }}
+                    </p>
+
+                    <hr>
+                    <div class="entry">
+                        <h4>Camera Name</h4>
+                        <p class="subtext">The friendly identifier</p>
+                        <input type="text" name="camera_name" value="{{ camera['name'] }}" required>
+                    </div>
+
+                    <div class="entry">
+                        <h4>Stream FPS</h4>
+                        <p class="subtext">The number of frames per second to record at (live stream is not affected)</p>
+                        <p class="subtext"><b>This will affect file sizes and video lengths! </b> - In most cases, the default is fine.</p>
+                        <input type="text" name="camera_fps" value="{{ camera['fps'] }}" required>
+                    </div>
+
+                   <!-- 
+                    <label>
+                        <h4>Stream Resolution</h4>
+                        <p class="subtext">The quality of the recorded/ streamed video. Lower quality uses less space.
+                        </p>
+                        <select name="camera_resolution" required>
+                            <option value="1920x1080" {% if camera['frame_width']==1920 and camera['frame_height']==1080
+                                %}selected{% endif %}>1920x1080 (HD)</option>
+                            <option value="1280x720" {% if camera['frame_width']==1280 and camera['frame_height']==720
+                                %}selected{% endif %}>1280x720 (High Quality)</option>
+                            <option value="640x480" {% if camera['frame_width']==640 and camera['frame_height']==480
+                                %}selected{% endif %}>640x480 (Normal)</option>
+                            <option value="320x240" {% if camera['frame_width']==320 and camera['frame_height']==240
+                                %}selected{% endif %}>320x240 (Low Quality)</option>
+                            <option value="160x120" {% if camera['frame_width']==160 and camera['frame_height']==120
+                                %}selected{% endif %}>160x120 (Space Saver)</option>
+                        </select>
+                    </label>
+                    --->
+
+                    <div class="entry">
+                        <h4>Record Duration</h4>
+                        <p class="subtext">How long to record each video before stopping and starting another</p>
+                        <input type="text" name="camera_duration" value="{{ camera['duration'] }}" required> minutes.
+                    </div>
+                    
+                    <div class="entry">
+                        <h4>Footage Age</h4>
+                        <p class="subtext">How long footage should be kept on the system before being removed</p>
+                        <input type="text" name="camera_age" value="{{ camera['age'] }}" required>minutes.
+                        <br>
+                        <sub>One day is 1440 minutes - plan accordingly...</sub>
+                    </div>
+                    <br>
+                    <br>
+                    <input onclick="notify('Camera settings are being saved...')" type="submit" value="Save">
+                </form>
+            </div>
+            <br><br>
+            {% endfor %}
+
+        </div>
+        <div id="footage" class="tab-content">
+            <h2>Footage</h2>
+            {% for camera_name, files in video_files.items() %}
+            <div class="camera-footage">
+                <h3>Camera: {{ camera_name }}</h3>
+                <table>
+                <thead>
+                    <tr>
+                    <th>File Name</th>
+                    <th>View</th>
+                    <th>Download</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for file in files %}
+                    <tr>
+                        <td>{{ file }}</td>
+                        <td><a href="/view/{{ camera_name }}/{{ file }}" target="_blank">View</a></td>
+                        <td><a href="/download/{{ camera_name }}/{{ file }}" download>Download</a></td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+                </table>
+            </div>
+            <br><br>
+            {% endfor %}
+        </div>
+        <div id="pictures" class="tab-content">
+            <h2>Pictures</h2>
+            {% for camera_name, files in pictures.items() %}
+            <div class="camera-footage">
+                <h3>Camera: {{ camera_name }}</h3>
+                <hr>
+                {% for file in files %}
+                <div class="picture-preview">
+                    <div class="picture-info">
+                        <p>{{ file }}</p>
+                    </div>
+                </div>
+                <img src="/static/snapshots/{{ camera_name }}/{{ file }}" alt="{{ file }}" class="img-preview">
+                <br><br>
+                {% endfor %}
+                
+            </div>
+            <br><br>
+            {% endfor %}
+        </div>
+        <div id="about" class="tab-content">
+            <h2>About</h2>
+            <p>VigilantBerry v3.0</p>
+            <p>&copy; 2024 VigilantBerry. All rights reserved.</p>
+            <p>
+                <a href="https://github.com/syntaxerror019/vigilantberry">
+                    View Source on GitHub
+                </a>
+            </p>
+            <p>
+                Released under the
+                <a href="https://opensource.org/licenses/MIT">
+                    MIT License
+                </a>
+            </p>
+            <p>
+                <a href="https://mileshilliard.com/">Miles Hilliard</a>
+            </p>
+        </div>
+    </div>
+    <script src="{{ url_for('static', filename='script.js') }}"></script>
+    <script>
+        if ("{{ available_device_change }}" == "1") {
+            notify("A change in available cameras has been detected.")
+        }
+    </script>
+</body>
+
+</html>
