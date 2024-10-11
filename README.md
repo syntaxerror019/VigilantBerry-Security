@@ -30,13 +30,32 @@ Configuring VigilantBerry is a breeze! With a user-friendly interface, you can s
 VigilantBerry is designed to be straightforward and user-friendly. Whether you're a beginner or an experienced tech enthusiast, you'll find it easy to set up and start using.
 
 ### Installation
-To begin, run the following commands to update your system:
+To begin, run the following commands to clone the repository:
 ```bash
-sudo apt update
-sudo apt upgrade -y
+git clone https://github.com/syntaxerror019/VigilantBerry
+cd VigilantBerry
 ```
-Once the commands finish executing, run this command to use the "GUI" installation:
 
+To install, you may use the interactive installation script.
+```bash
+sudo ./installer.sh
+```
+If you are wary about running an elevated shell script, you may inspect the contents for your self.
+This whole project, including the installer is open source. Everything is in the repository.
+<br><br>
+If you see an error or suspect something has gone wrong, it is wise to inspect the `log.txt` file.
+Here you will find a full history of the installation process.
+<br>
+If you need assistance, please send an email to sntx@sntx.dev or fill out <a href="https://report.sntx.dev/error?url=(not%20applicable)&code=(not%20applicable)">this form</a>
+
+### First-run
+To run the software, you must first navigate to the cloned repository folder.
+Run the following to start the venv and run the python script:
+```bash
+./vigiberry.sh
+```
+This will start a webserver at the shown URL. Navigate to the URL in a web browser.
+You will be prompted to fill out the setup page. This is only necessary once.
 
 ### Future Features 🌈
 Future updates may include:
@@ -48,7 +67,7 @@ Future updates may include:
 We welcome contributions from the community! If you'd like to enhance VigilantBerry with new features or improvements, please feel free to open issues, suggest features, or submit pull requests. Together, we can make VigilantBerry even better!
 
 ## License 📝
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+This project is licensed under the MIT License.
 
 ## Support 🙌
 If you have any questions or need assistance, feel free to open an issue in this repository. We’re here to help!
