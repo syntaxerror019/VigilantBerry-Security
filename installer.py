@@ -5,7 +5,7 @@ from rich.console import Console
 from rich.progress import Progress, SpinnerColumn, TextColumn, BarColumn
 import os
 
-console = Console()
+console = Console(record=True)
 
 log_file = open("log.txt", "w")
 
@@ -17,7 +17,7 @@ original_print = console.print
 
 def custom_print(*args, **kwargs):
     original_print(*args, **kwargs)
-    log_to_file(console.export_text())
+    log_to_file(console.export_text(*args))
 
 console.print = custom_print
 
