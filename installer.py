@@ -134,7 +134,8 @@ def install_dependencies():
         "libavformat-dev",
         "libswscale-dev",
         "python3-dev",
-        "python3-pip"
+        "python3-pip",
+        "python3-venv"
     ]
     command = ["sudo", "apt-get", "install", "-y"] + dependencies
     run_command(command, "Installing dependencies...")
@@ -142,7 +143,8 @@ def install_dependencies():
 def create_virtualenv():
     """Create a virtual environment."""
     if not os.path.exists('venv'):
-        run_command(["sudo", "python3", "-m", "venv", "venv"], "Creating virtual environment...")
+        run_command(["python3", "-m", "venv", "venv"], "Creating virtual environment...")
+        run_command(["source", "venv/bin/activate"], "Activating virtual environment...")
         console.print("[bold green]Virtual environment created![/bold green]")
 
 def install_python_packages():
