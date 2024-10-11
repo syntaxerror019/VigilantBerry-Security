@@ -151,7 +151,7 @@ def install_python_packages():
         "numpy",
         "opencv-python-headless"
     ]
-    run_command(["venv/bin/pip", "install"] + packages, "Installing Python packages...")
+    run_command(["venv/bin/python3", "-m", "pip3", "install"] + packages, "Installing Python packages...")
 
 def test_opencv():
     """Test if OpenCV is working correctly."""
@@ -174,7 +174,7 @@ print("OpenCV is working! Check 'test_image.png'.")
     with open("test_opencv.py", "w") as f:
         f.write(test_script)
     
-    result = subprocess.run(["venv/bin/python", "test_opencv.py"], capture_output=True, text=True)
+    result = subprocess.run(["venv/bin/python3", "test_opencv.py"], capture_output=True, text=True)
     console.print(result.stdout)
     console.print(f"[bold green]OpenCV test script executed! Image saved as 'test_image.png'.[/bold green]")
 

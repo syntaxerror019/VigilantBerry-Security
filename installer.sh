@@ -12,7 +12,7 @@ if [ "$(id -u)" -ne 0 ]; then
 fi
 
 print_message "Installing required dependencies..."
-apt-get install -y python3 python3-pip git rich
+apt-get install -y python3 python3-pip gitld
 
 # Install rich for Python
 print_message "Installing the rich library..."
