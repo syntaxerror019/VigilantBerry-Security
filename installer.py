@@ -17,7 +17,7 @@ original_print = console.print
 
 def custom_print(*args, **kwargs):
     original_print(*args, **kwargs)
-    log_to_file(console.export_text(*args, **kwargs))
+    log_to_file(console.export_text())
 
 console.print = custom_print
 
