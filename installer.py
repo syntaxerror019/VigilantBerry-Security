@@ -5,8 +5,21 @@ from rich.console import Console
 from rich.progress import Progress, SpinnerColumn, TextColumn, BarColumn
 import os
 
-# Set up the console
 console = Console()
+
+log_file = open("log.txt", "w")
+
+def log_to_file(message):
+    log_file.write(message + "\n")
+    log_file.flush()
+
+original_print = console.print
+
+def custom_print(*args, **kwargs):
+    original_print(*args, **kwargs)
+    log_to_file(console.export_text(*args, **kwargs))
+
+console.print = custom_print
 
 
 def update_apt():
@@ -158,21 +171,16 @@ def install_python_packages():
 def test_opencv():
     """Test if OpenCV is working correctly."""
     test_script = """
-import cv2
-import numpy as np
+        import cv2
+        import numpy as np
 
-# Create a black image
-image = np.zeros((512, 512, 3), np.uint8)
+        image = np.zeros((512, 512, 3), np.uint8)
+        cv2.circle(image, (256, 256), 100, (255, 255, 255), -1)
+        cv2.imwrite('test_image.png', image)
 
-# Draw a white circle
-cv2.circle(image, (256, 256), 100, (255, 255, 255), -1)
+        print("please check 'test_image.png'.")
+    """
 
-# Save the image
-cv2.imwrite('test_image.png', image)
-
-print("OpenCV is working! Check 'test_image.png'.")
-"""
-    # Run the test script
     with open("test_opencv.py", "w") as f:
         f.write(test_script)
     
@@ -180,25 +188,26 @@ print("OpenCV is working! Check 'test_image.png'.")
     console.print(result.stdout)
     console.print(f"[bold green]OpenCV test script executed! Image saved as 'test_image.png'.[/bold green]")
 
-# Clear the console
+##### Installation Process #####
+
 console.clear()
 
 console.print("[white][bold]VigilantBerry[/bold] - v3 - 2024[/white], [yellow]Miles Hilliard[/yellow], All Rights Reserved | [cyan][underline]https://mileshilliard.com[/underline][/cyan]", style="")
 console.print()
+
 console.print("Installing your software... Please wait...", style="bold")
 console.print()
 
-# Check for sudo privileges
+# make sure this py file is run with sudo
 if os.geteuid() != 0:
     console.print("[bold red]This script must be run with sudo privileges.[/bold red]")
     sys.exit(1)
 
-# Check if Python is installed
+# confirm there is python, as it should be installed if not already present by the shell script.
 if not check_python_installed():
     console.print("[bold red]Python is not installed. Please install Python 3 and try again.[/bold red]")
     sys.exit(1)
 
-# Run apt update and upgrade with progress bars
 console.print("Updating apt...", style="bold")
 update_apt()
 
@@ -206,9 +215,13 @@ console.print("\n[bold]Apt update complete![/bold]\n")
 console.print("Upgrading packages...", style="bold")
 upgrade_apt()
 
+console.clear()
+
 console.print("\n[bold]Apt upgrade complete![/bold]\n")
 console.print("Installing Dependencies...", style="bold")
 install_dependencies()
+
+console.clear()
 
 console.print("\n[bold]Dependencies installation complete![/bold]\n")
 console.print("Creating virtual environment...", style="bold")
@@ -218,8 +231,15 @@ console.print("\n[bold]Virtual environment setup complete![/bold]\n")
 console.print("Installing Python packages...", style="bold")
 install_python_packages()
 
+console.clear()
+
 console.print("\n[bold]Python packages installation complete![/bold]\n")
 console.print("Testing OpenCV installation...", style="bold")
 test_opencv()
 
-console.print("\n### All installations complete! ###", style="bold green")
+console.clear()
+
+console.print("\n### Installation process finished ###", style="bold green")
+console.print("If you suspect an error, please check the log file for a persistent record of the installation process.", style="italic")
+console.print()
+console.print("[bold]Thank you for using VigilantBerry![/bold]")
