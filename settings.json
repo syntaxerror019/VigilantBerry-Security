@@ -6,5 +6,7 @@
     "connectivity": "client",
     "record_path": "",
     "settings": {
+        "monitor.cameras": [
+        ]
     }
 }
