@@ -17,7 +17,7 @@ original_print = console.print
 
 def custom_print(*args, **kwargs):
     original_print(*args, **kwargs)
-    log_to_file(console.export_text(*args))
+    log_to_file(" ".join(map(str, args)))
 
 console.print = custom_print
 
@@ -33,7 +33,6 @@ def update_apt():
         universal_newlines=True
     )
 
-    # Create a progress bar
     with Progress(
         SpinnerColumn(),
         TextColumn("[bold green]Updating packages...[/bold green]"),
@@ -42,18 +41,17 @@ def update_apt():
         task = progress.add_task("Running...", total=100)
 
         while True:
-            # Read output line by line
+            # output line by line
             output = process.stdout.readline()
             if output == "" and process.poll() is not None:
                 break
             if output:
-                # Update the progress bar based on the output
                 console.log(output.strip())  # Print the output
                 progress.update(task, advance=1)
 
-            time.sleep(0.1)  # Simulate some delay for the progress bar
+            time.sleep(0.1)
 
-    # Capture any errors
+    # errors?
     _, errors = process.communicate()
     if errors:
         console.print(f"[bold red]Error:[/bold red] {errors.strip()}")
@@ -69,7 +67,6 @@ def upgrade_apt():
         universal_newlines=True
     )
 
-    # Create a progress bar
     with Progress(
         SpinnerColumn(),
         TextColumn("[bold green]Updating packages...[/bold green]"),
@@ -78,18 +75,15 @@ def upgrade_apt():
         task = progress.add_task("Running...", total=100)
 
         while True:
-            # Read output line by line
             output = process.stdout.readline()
             if output == "" and process.poll() is not None:
                 break
             if output:
-                # Update the progress bar based on the output
-                console.log(output.strip())  # Print the output
+                console.log(output.strip())
                 progress.update(task, advance=1)
 
-            time.sleep(0.1)  # Simulate some delay for the progress bar
+            time.sleep(0.1)
 
-    # Capture any errors
     _, errors = process.communicate()
     if errors:
         console.print(f"[bold red]Error:[/bold red] {errors.strip()}")
