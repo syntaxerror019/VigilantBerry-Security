@@ -151,7 +151,7 @@ def install_python_packages():
         "numpy",
         "opencv-python-headless"
     ]
-    run_command(["venv/bin/python3", "-m", "pip3", "install"] + packages, "Installing Python packages...")
+    run_command(["venv/bin/python3", "-m", "pip", "install"] + packages, "Installing Python packages...")
 
 def test_opencv():
     """Test if OpenCV is working correctly."""
