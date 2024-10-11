@@ -233,7 +233,7 @@ create_virtualenv()
 console.clear()
 
 console.print("\n[bold]Virtual environment setup complete![/bold]\n")
-console.print("Installing Python packages...", style="bold")
+console.print("Installing Python packages... This may take some time...", style="bold")
 install_python_packages()
 
 console.clear()
