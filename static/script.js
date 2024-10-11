@@ -109,24 +109,17 @@ function finish() {
             'Content-Type': 'application/json'
         },
         body: JSON.stringify({cameras: selectedCameras, path: path})
-    })
-    .then(response => response.json())
-    .then(data => {
-        // Handle the response code and message here
-        console.log('Response code:', data.code);
-        console.log('Response message:', data.message);
-
-        notify("Setup has been completed! Redirecting to the home page...");
-
-        setTimeout(() => {
-            window.location.href = '/';
-        }, 2000);
-    })
-    .catch(error => {
-        // Handle any errors that occurred during the request
-        console.error('Error:', error);
-        alert('An error occurred while processing your request. Please try again.');
     });
+
+    // Handle the response code and message here
+    console.log('Response code:', data.code);
+    console.log('Response message:', data.message);
+
+    notify("⚠️ Please do not leave! Redirecting to the home page...");
+
+    setTimeout(() => {
+        window.location.href = '/';
+    }, 5000);
 }
 
 function next(currentId, upcomingId) {
