@@ -111,10 +111,6 @@ function finish() {
         body: JSON.stringify({cameras: selectedCameras, path: path})
     });
 
-    // Handle the response code and message here
-    console.log('Response code:', data.code);
-    console.log('Response message:', data.message);
-
     notify("⚠️ Please do not leave! Redirecting to the home page...");
 
     setTimeout(() => {
