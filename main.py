@@ -39,8 +39,6 @@ NAME = None
 MODE = None
 IP = None
 
-
-
 logging.basicConfig(
     level=logging.DEBUG,
     format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
@@ -98,7 +96,6 @@ def restart_script():
     time.sleep(3) # Wait for threads to close TODO: Make this more elegant
 
     kill = False
-
     setup()
 
 def read_settings():
@@ -199,48 +196,39 @@ def recording_function(cameras, objs, check_interval=5):
 
                 time.sleep(.1)
 
-            # Convert frame to grayscale for motion detection
             gray_frame = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
             gray_frame = cv2.GaussianBlur(gray_frame, (21, 21), 0)
 
-            # Initialize background frame for motion detection
             if 'background' not in camera or 'motion_counter' not in camera or 'last_snapshot_time' not in camera:
                 camera['background'] = gray_frame
                 camera['motion_counter'] = 0
                 camera['last_snapshot_time'] = 0
                 continue
 
-            # Compute the absolute difference between the current frame and the background frame
             frame_delta = cv2.absdiff(camera['background'], gray_frame)
             thresh = cv2.threshold(frame_delta, 25, 255, cv2.THRESH_BINARY)[1]
 
-            # Dilate the threshold image to fill in holes, then find contours on threshold image
             thresh = cv2.dilate(thresh, None, iterations=2)
             contours, _ = cv2.findContours(thresh.copy(), cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
 
-            # Initialize variables to hold the bounding box coordinates
             motion_detected = False
             min_x, min_y = frame.shape[1], frame.shape[0]
             max_x, max_y = 0, 0
 
-            # Loop over the contours
             for contour in contours:
                 if cv2.contourArea(contour) < 700:
                     continue
 
-                # Compute the bounding box for the contour
                 (x, y, w, h) = cv2.boundingRect(contour)
                 min_x, min_y = min(min_x, x), min(min_y, y)
                 max_x, max_y = max(max_x, x + w), max(max_y, y + h)
                 motion_detected = True
 
-            # If motion is detected, increment the motion counter
             if motion_detected:
                 camera['motion_counter'] += 1
             else:
                 camera['motion_counter'] = 0
 
-            # Draw the bounding box if motion is detected consistently
             if camera['motion_counter'] >= 10:
                 cv2.rectangle(frame, (min_x, min_y), (max_x, max_y), (0, 255, 0), 2)
                 # Save snapshot if 5 seconds have passed since the last snapshot
@@ -376,7 +364,6 @@ def setup() -> None:
     debug = settings.get("debug") or False
 
     IP = get_local_ip()
-
 
     if VIRGIN:
         logging.info("Virgin mode detected.")

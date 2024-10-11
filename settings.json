@@ -1,21 +1,10 @@
 {
     "version": "3.6.6",
-    "virgin": false,
+    "virgin": true,
     "debug": false,
     "name": "Camera Client 001",
     "connectivity": "client",
-    "record_path": "/home/miles/Documents/security/static/footage",
+    "record_path": "",
     "settings": {
-        "monitor.cameras": [
-            {
-                "index": 0,
-                "name": "crap shoot",
-                "frame_width": 640.0,
-                "frame_height": 480.0,
-                "fps": 30.0,
-                "duration": 1.0,
-                "age": 4320.0
-            }
-        ]
     }
 }
