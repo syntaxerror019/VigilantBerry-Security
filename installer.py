@@ -19,7 +19,14 @@ def custom_print(*args, **kwargs):
     original_print(*args, **kwargs)
     log_to_file(" ".join(map(str, args)))
 
+original_log = console.log
+
+def custom_log(*args, **kwargs):
+    original_log(*args, **kwargs)
+    log_to_file(" ".join(map(str, args)))
+
 console.print = custom_print
+console.log = custom_log
 
 
 def update_apt():
@@ -158,7 +165,9 @@ def install_python_packages():
     """Install necessary Python packages."""
     packages = [
         "numpy",
-        "opencv-python-headless"
+        "opencv-python-headless",
+        "flask",
+        "pathlib",
     ]
     run_command(["venv/bin/python3", "-m", "pip", "install"] + packages, "Installing Python packages...")
 
@@ -220,6 +229,8 @@ console.clear()
 console.print("\n[bold]Dependencies installation complete![/bold]\n")
 console.print("Creating virtual environment...", style="bold")
 create_virtualenv()
+
+console.clear()
 
 console.print("\n[bold]Virtual environment setup complete![/bold]\n")
 console.print("Installing Python packages...", style="bold")

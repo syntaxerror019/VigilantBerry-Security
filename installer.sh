@@ -24,4 +24,4 @@ pip3 install rich
 print_message "Running installer.py..."
 python3 installer.py
 
-print_message "--- END OF INSTALLER.SH ---
+print_message "--- END OF INSTALLER.SH ---"

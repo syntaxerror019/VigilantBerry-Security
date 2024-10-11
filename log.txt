@@ -1,5 +1,0 @@
-[white][bold]VigilantBerry[/bold] - v3 - 2024[/white], [yellow]Miles Hilliard[/yellow], All Rights Reserved | [cyan][underline]https://mileshilliard.com[/underline][/cyan]
-
-Installing your software... Please wait...
-
-[bold red]This script must be run with sudo privileges.[/bold red]
