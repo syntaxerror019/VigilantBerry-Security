@@ -144,7 +144,7 @@ def create_virtualenv():
     """Create a virtual environment."""
     if not os.path.exists('venv'):
         run_command(["python3", "-m", "venv", "venv"], "Creating virtual environment...")
-        run_command(["source", "venv/bin/activate"], "Activating virtual environment...")
+        #run_command(["source", "venv/bin/activate"], "Activating virtual environment...")
         console.print("[bold green]Virtual environment created![/bold green]")
 
 def install_python_packages():
