@@ -100,7 +100,20 @@ def restart_script():
 
 def read_settings():
     if not os.path.exists(os.path.join(os.path.dirname(os.path.abspath(sys.argv[0])), "settings.json")):
-        return None
+        default_settings = {
+            "version": "3.6.6",
+            "virgin": True,
+            "debug": False,
+            "name": "Camera Client 001",
+            "connectivity": "client",
+            "record_path": "",
+            "settings": {
+                "monitor.cameras": [
+                ]
+            }
+        }
+        write_settings(default_settings)
+        return default_settings
     
     with open(os.path.join(os.path.dirname(os.path.abspath(sys.argv[0])), "settings.json"), "r") as f:
         content = f.read()
