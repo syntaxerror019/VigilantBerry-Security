@@ -7,4 +7,4 @@ venv/
 *.sublime-project
 *.sublime-workspace
 static/footage/
-settings.json
+#settings.json
