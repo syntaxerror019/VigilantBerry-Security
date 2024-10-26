@@ -1,4 +1,4 @@
-# VigilantBerry 📹🐍
+# VigilantBerry - CCTV System for RPi 📹
 
 Welcome to **VigilantBerry**, the ultimate homebrew security camera system designed to run seamlessly on your Raspberry Pi! With its powerful features and customizable settings, VigilantBerry transforms your Raspberry Pi into a smart security solution that keeps your home safe and secure. 
 
@@ -46,7 +46,8 @@ This whole project, including the installer is open source. Everything is in the
 If you see an error or suspect something has gone wrong, it is wise to inspect the `log.txt` file.
 Here you will find a full history of the installation process.
 <br>
-If you need assistance, please send an email to sntx@sntx.dev or fill out <a href="https://report.sntx.dev/error?url=(not%20applicable)&code=(not%20applicable)">this form</a>
+<br>
+Feel free to open an Issue if you notice any errors or need assistance!
 
 ### First-run
 To run the software, you must first navigate to the cloned repository folder.
