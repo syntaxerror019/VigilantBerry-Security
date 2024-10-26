@@ -1,12 +1,21 @@
 {
     "version": "3.6.6",
-    "virgin": true,
+    "virgin": false,
     "debug": false,
     "name": "Camera Client 001",
     "connectivity": "client",
-    "record_path": "",
+    "record_path": "/home/miles/Documents/security/static/footage",
     "settings": {
         "monitor.cameras": [
+            {
+                "index": 0,
+                "name": "Default Camera 0",
+                "frame_width": 640.0,
+                "frame_height": 480.0,
+                "fps": 30.0,
+                "duration": 60,
+                "age": 4320
+            }
         ]
     }
 }

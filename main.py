@@ -152,7 +152,7 @@ def list_cameras():
                 "fps": cap.get(cv2.CAP_PROP_FPS)
             }
             available_cameras.append(camera_info)
-            cap.release()
+        cap.release()
     return available_cameras
 
 def recording_function(cameras, objs, check_interval=5):
@@ -357,7 +357,14 @@ def setup() -> None:
 
     global LOCATION, VERSION, VIRGIN, NAME, MODE, IP, listed_cameras
     settings = read_settings()
-    listed_cameras = list_cameras()
+    cameras = list_cameras()
+
+    if not cameras:
+        logging.critical("No cameras found.")
+        logging.critical("exiting...")
+        sys.exit()
+    
+    listed_cameras = cameras
 
     logging.info("External modules imported.")
     
@@ -618,7 +625,8 @@ def footage_save():
 
 @app.route("/setup")
 def setup_web():
-    cameras = list_cameras()
+    cameras = listed_cameras
+    print("CAMERAS", cameras)
     if not cameras:
         logging.critical("No cameras found.")
         return "<h1>No cameras found on the system.</h1><p>There were no usable cameras found on your system. Please check all connections and reload this page.</p>", 500
