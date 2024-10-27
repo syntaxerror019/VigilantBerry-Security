@@ -55,6 +55,10 @@
                 <p class="subtext">Instance Name: {{ NAME }}</p><br>
                 <p class="subtext">Instance Mode: {{ MODE }}</p><br>
                 <p class="subtext">Instance IP Address: {{ IP }}</p><br>
+                <p class="subtext">CPU Usage: {{ cpu }}%</p><br>
+                <p class="subtext">CPU Temp: {{ temp }}</p><br>
+                <p class="subtext">RAM Usage: {{ memory }}</p><br>
+                <p class="subtext">Disk Usage: {{ (disk['used'] / (1024 ** 3)) | round(2) }} GB ({{ disk['percent'] }}%)</p><br>
             </div>
         </div>
         <div id="settings" class="tab-content">

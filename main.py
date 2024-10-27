@@ -3,7 +3,8 @@ from flask import Flask, render_template, redirect, request, url_for, jsonify, R
 from datetime import datetime, timedelta
 from camera import Camera
 import json
-from queue import Queue
+import psutil
+import subprocess
 from pathlib import Path
 from datetime import timedelta
 import socket
@@ -140,6 +141,39 @@ def update_camera_entry(camera_statuses, target_index, updates) -> None:
         if status['index'] == target_index:
             status.update(updates)
             break
+
+def get_cpu_usage() -> float:
+    return psutil.cpu_percent(interval=1)
+
+def get_memory_usage() -> int:
+    mem = psutil.virtual_memory()
+    return int(mem.percent)
+
+def get_disk_usage() -> dict:
+    disk = psutil.disk_usage('/')
+    return {
+        "used": disk.used,
+        "free": disk.free,
+        "percent": disk.percent,
+    }
+
+def get_temperature() -> str:
+    try:
+        if os.path.exists('/usr/bin/vcgencmd'):
+            temp_output = subprocess.check_output(['vcgencmd', 'measure_temp']).decode()
+            return temp_output.strip().split('=')[1]  # e.g., '45.0\'C'
+        
+        if os.path.exists('/usr/bin/sensors'):
+            temp_output = subprocess.check_output(['sensors']).decode()
+            # Find temperature line
+            for line in temp_output.splitlines():
+                if 'temp' in line:
+                    return line.strip()
+        
+        return "temp cmd not available."
+    
+    except Exception as e:
+        return str(e)
 
 def get_uptime() -> str:
     with open('/proc/uptime', 'r') as f:
@@ -469,7 +503,7 @@ def dashboard():
             reverse=True
         )
 
-    return render_template("index.html", uptime=get_uptime(), cameracount=len(cameras), cameras=cameras, VERSION=VERSION, NAME=NAME, MODE=MODE, IP=IP, available_device_change=0, video_files=video_files, pictures=pictures)
+    return render_template("index.html", cpu=get_cpu_usage(), memory=get_memory_usage(), disk=get_disk_usage(), temp=get_temperature(), uptime=get_uptime(), cameracount=len(cameras), cameras=cameras, VERSION=VERSION, NAME=NAME, MODE=MODE, IP=IP, available_device_change=0, video_files=video_files, pictures=pictures)
 
 @app.route("/kill")
 def kill_all():
