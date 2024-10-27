@@ -168,6 +168,7 @@ def install_python_packages():
         "opencv-python-headless",
         "flask",
         "pathlib",
+        "psutil"
     ]
     run_command(["venv/bin/python3", "-m", "pip", "install"] + packages, "Installing Python packages...")
 
