@@ -49,16 +49,16 @@
             {% endfor %}
             <br>
             <div class="camera">
-                <p class="subtext">Version: {{ VERSION }}</p><br>
-                <p class="subtext">Cameras: {{ cameracount }}</p><br>
-                <p class="subtext">Uptime: {{ uptime }}</p><br>
-                <p class="subtext">Instance Name: {{ NAME }}</p><br>
-                <p class="subtext">Instance Mode: {{ MODE }}</p><br>
-                <p class="subtext">Instance IP Address: {{ IP }}</p><br>
-                <p class="subtext">CPU Usage: {{ cpu }}%</p><br>
-                <p class="subtext">CPU Temp: {{ temp }}</p><br>
-                <p class="subtext">RAM Usage: {{ memory }}</p><br>
-                <p class="subtext">Disk Usage: {{ (disk['used'] / (1024 ** 3)) | round(2) }} GB ({{ disk['percent'] }}%)</p><br>
+                <p class="subtext stats">Version: {{ VERSION }}</p><br>
+                <p class="subtext stats">Cameras: {{ cameracount }}</p><br>
+                <p class="subtext stats">Uptime: {{ uptime }}</p><br>
+                <p class="subtext stats">Instance Name: {{ NAME }}</p><br>
+                <p class="subtext stats">Instance Mode: {{ MODE }}</p><br>
+                <p class="subtext stats">Instance IP Address: {{ IP }}</p><br>
+                <p class="subtext stats">CPU Usage: {{ cpu }}%</p><br>
+                <p class="subtext stats">CPU Temp: {{ temp }}</p><br>
+                <p class="subtext stats">RAM Usage: {{ memory }}%</p><br>
+                <p class="subtext stats">Disk Usage: {{ (disk['used'] / (1024 ** 3)) | round(2) }} GB ({{ disk['percent'] }}%)</p><br>
             </div>
         </div>
         <div id="settings" class="tab-content">
@@ -155,26 +155,30 @@
         </div>
         <div id="pictures" class="tab-content">
             <h2>Pictures</h2>
-            {% if pictures %}
-                {% for camera_name, files in pictures.items() %}
-                <div class="camera-footage">
-                    <h3>Camera: {{ camera_name }}</h3>
-                    <hr>
-                    {% for file in files %}
-                    <div class="picture-preview">
-                        <div class="picture-info">
-                            <p>{{ file }}</p>
-                        </div>
+                {% if pictures %}
+                    {% for camera_name, files in pictures.items() %}
+                    <div class="camera-footage">
+                        <h3>Camera: {{ camera_name }}</h3>
+                        <hr>
+                        {% if files %}
+                            {% for file in files %}
+                            <div class="picture-preview">
+                                <div class="picture-info">
+                                    <p>{{ file }}</p>
+                                </div>
+                            </div>
+                            <img src="/static/snapshots/{{ camera_name }}/{{ file }}" alt="{{ file }}" class="img-preview">
+                            <br><br>
+                            {% endfor %}
+                        {% else %}
+                            <p>No pictures available for this camera. Please refresh to see the latest images.</p>
+                        {% endif %}
                     </div>
-                    <img src="/static/snapshots/{{ camera_name }}/{{ file }}" alt="{{ file }}" class="img-preview">
                     <br><br>
                     {% endfor %}
-                </div>
-                <br><br>
-                {% endfor %}
-            {% else %}
-                <p>No pictures available. Please try refreshing your page to see the latest pictures.</p>
-            {% endif %}
+                {% else %}
+                    <p>No pictures available. Please refresh to see the latest images.</p>
+                {% endif %}
         </div>
         <div id="about" class="tab-content">
             <h2>About</h2>
