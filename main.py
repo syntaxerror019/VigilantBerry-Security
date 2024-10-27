@@ -376,12 +376,17 @@ def setup() -> None:
         
     logging.info("Settings file loaded.")
 
-    LOCATION = settings.get("record_path") or LOCATION
-    VERSION = settings.get("version") or VERSION
-    VIRGIN = settings.get("virgin") or VIRGIN
-    NAME = settings.get("name") or NAME
-    MODE = settings.get("connectivity") or MODE
-    debug = settings.get("debug") or False
+    print("SETTINGS", settings)
+    print("VIRGIN", settings["virgin"], settings.get("virgin"))
+
+    LOCATION = settings.get("record_path", LOCATION)
+    VERSION = settings.get("version", VERSION)
+    VIRGIN = settings.get("virgin", VIRGIN)
+    NAME = settings.get("name", NAME)
+    MODE = settings.get("connectivity", MODE)
+    debug = settings.get("debug", False)
+
+    print("STill VIRgin?", VIRGIN)
 
     IP = get_local_ip()
 
@@ -409,7 +414,9 @@ def setup() -> None:
 
 @app.route("/")
 def index():
+    print("isVrigin",VIRGIN)
     if VIRGIN:
+        print("Virtgin is ", VIRGIN)
         return redirect(url_for("setup_web"))
     
     return redirect(url_for("dashboard"))
@@ -419,6 +426,7 @@ def dashboard():
     global listed_cameras
 
     if VIRGIN:
+        print("Virtgin is ", VIRGIN)
         return redirect(url_for("setup_web"))
 
     cameras = read_settings()["settings"]["monitor.cameras"]
@@ -428,6 +436,7 @@ def dashboard():
 
     for camera in cameras:
         folder = os.path.join(LOCATION, camera['name'])
+        print(f"FOLDER LOCATION FOR CAMERA {camera['name']}: {folder}")
         if not os.path.exists(folder):
             return redirect(url_for("setup_web"))
         video_files[camera['name']] = sorted(
@@ -592,7 +601,7 @@ def update_camera_list():
             print("Camera added.")
             entry = {
                 "index": camera["index"],
-                "name": "Default Camera " + str(camera["index"]),
+                "name": "Default_Camera_" + str(camera["index"]),
                 "frame_width": camera["frame_width"],
                 "frame_height": camera["frame_height"],
                 "fps": camera["fps"],
