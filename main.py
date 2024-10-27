@@ -459,9 +459,7 @@ def setup() -> None:
 
 @app.route("/")
 def index():
-    print("isVrigin",VIRGIN)
     if VIRGIN:
-        print("Virtgin is ", VIRGIN)
         return redirect(url_for("setup_web"))
     
     return redirect(url_for("dashboard"))
@@ -471,7 +469,6 @@ def dashboard():
     global listed_cameras
 
     if VIRGIN:
-        print("Virtgin is ", VIRGIN)
         return redirect(url_for("setup_web"))
 
     cameras = read_settings()["settings"]["monitor.cameras"]
@@ -494,7 +491,6 @@ def dashboard():
 
     for camera in cameras:
         folder = os.path.join(SNAPSHOTS, camera['name'])
-        print("FOLDER PATH FOR SNAPSHOTS", folder)
         if not os.path.exists(folder):
             return redirect(url_for("setup_web"))
         pictures[camera['name']] = sorted(
@@ -526,7 +522,6 @@ def kill_all():
 @app.route("/download/<string:camera_name>/<string:file_name>")
 def download(camera_name, file_name):
     file_path = os.path.join(LOCATION, camera_name, file_name)
-    print("FILE PATH: ", file_path)
     if os.path.exists(file_path):
         return send_file(file_path, as_attachment=True)
     else:
@@ -535,7 +530,6 @@ def download(camera_name, file_name):
 @app.route("/view/<string:camera_name>/<string:file_name>")
 def view(camera_name, file_name):
     video_path = os.path.join(LOCATION, camera_name, file_name)
-    print("FILE PATH: ", video_path)
 
     if os.path.exists(video_path):
         range_header = request.headers.get('Range', None)
@@ -585,7 +579,6 @@ def video_feed(camera_index):
 def save_camera_data(camera_index):
     settings = read_settings()
     cameras = settings["settings"]["monitor.cameras"]
-    print("REQUEST", request.form)
 
     for camera in cameras:
         if camera["index"] == camera_index:
@@ -611,7 +604,6 @@ def save_camera_data(camera_index):
 @app.route('/save_app', methods=["POST"])
 def save_data(camera_index):
     settings = read_settings()
-    print("REQUEST", request.json)
 
     var = request.json["variable"]
     val = request.json["value"]
@@ -639,11 +631,9 @@ def update_camera_list():
     settings = read_settings()
     cameras = list_cameras()
     selected_cameras = request.json["cameras"]
-    print("CAMERAS", selected_cameras)
+
     for x, camera in enumerate(cameras):
-        print(camera["index"])
         if str(camera["index"]) in selected_cameras:
-            print("Camera added.")
             entry = {
                 "index": camera["index"],
                 "name": "Default_Camera_" + str(camera["index"]),
@@ -680,7 +670,6 @@ def footage_save():
 @app.route("/setup")
 def setup_web():
     cameras = listed_cameras
-    print("CAMERAS", cameras)
     if not cameras:
         logging.critical("No cameras found.")
         return "<h1>No cameras found on the system.</h1><p>There were no usable cameras found on your system. Please check all connections and reload this page.</p>", 500
