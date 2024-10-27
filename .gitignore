@@ -6,5 +6,6 @@ venv/
 *.code-workspace
 *.sublime-project
 *.sublime-workspace
-static/footage/
 settings.json
+#static/snapshots/
+#static/footage/
