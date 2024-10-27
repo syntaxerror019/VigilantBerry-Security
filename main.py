@@ -104,7 +104,7 @@ def read_settings():
             "version": "3.6.6",
             "virgin": True,
             "debug": False,
-            "name": "Camera Client 001",
+            "name": "vberry",
             "connectivity": "client",
             "record_path": "",
             "settings": {
