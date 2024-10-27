@@ -1,6 +1,6 @@
 import cv2, numpy, time, threading, os, logging, sys
 from flask import Flask, render_template, redirect, request, url_for, jsonify, Response, send_file
-from datetime import datetime
+from datetime import datetime, timedelta
 from camera import Camera
 import json
 from queue import Queue
@@ -30,6 +30,9 @@ writers = {}
 
 if not os.path.exists(default_path):
     os.makedirs(default_path)
+
+if not os.path.exists(snapshots):
+    os.makedirs(snapshots)
 
 SNAPSHOTS = snapshots
 LOCATION = default_path
@@ -77,7 +80,7 @@ def generate_fallback(width, height, text="No signal"):
     
     return fallback_frame
 
-def get_local_ip():
+def get_local_ip() -> str:
     try:
         with socket.socket(socket.AF_INET, socket.SOCK_DGRAM) as s:
             s.connect(("8.8.8.8", 80))
@@ -85,7 +88,7 @@ def get_local_ip():
     except Exception:
         return "Unable to get IP address"
 
-def restart_script():
+def restart_script() -> None:
     """Restarts the current script."""
 
     logging.info("Restarting script...")
@@ -98,7 +101,7 @@ def restart_script():
     kill = False
     setup()
 
-def read_settings():
+def read_settings() -> dict:
     if not os.path.exists(os.path.join(os.path.dirname(os.path.abspath(sys.argv[0])), "settings.json")):
         default_settings = {
             "version": "3.6.6",
@@ -121,11 +124,11 @@ def read_settings():
             return None
         return json.loads(content)
 
-def write_settings(settings):
+def write_settings(settings) -> None:
     with open("settings.json", "w") as file:
         json.dump(settings, file, indent=4)
 
-def update_camera_entry(camera_statuses, target_index, updates):
+def update_camera_entry(camera_statuses, target_index, updates) -> None:
     """
     Update the fields of a specific camera status entry.
 
@@ -138,8 +141,14 @@ def update_camera_entry(camera_statuses, target_index, updates):
             status.update(updates)
             break
 
+def get_uptime() -> str:
+    with open('/proc/uptime', 'r') as f:
+        uptime_seconds = float(f.readline().split()[0])
 
-def list_cameras():
+    uptime = str(timedelta(seconds=uptime_seconds))
+    return uptime
+
+def list_cameras() -> list:
     available_cameras = []
     for index in range(10):  # Check first 10 indices
         cap = cv2.VideoCapture(index)
@@ -155,12 +164,17 @@ def list_cameras():
         cap.release()
     return available_cameras
 
-def recording_function(cameras, objs, check_interval=5):
+def recording_function(cameras, objs, check_interval=5) -> None:
     """Recording thread for each all cameras with optimized CPU usage."""
 
     current_datetime = datetime.now()
 
     for camera in cameras:
+        snapshot = f"{SNAPSHOTS}/{camera['name']}"
+
+        if not os.path.exists(snapshot):
+            os.makedirs(snapshot)
+
         folder = f"{LOCATION}/{camera['name']}"
 
         if not os.path.exists(folder):
@@ -376,17 +390,14 @@ def setup() -> None:
         
     logging.info("Settings file loaded.")
 
-    print("SETTINGS", settings)
-    print("VIRGIN", settings["virgin"], settings.get("virgin"))
-
-    LOCATION = settings.get("record_path", LOCATION)
     VERSION = settings.get("version", VERSION)
     VIRGIN = settings.get("virgin", VIRGIN)
     NAME = settings.get("name", NAME)
     MODE = settings.get("connectivity", MODE)
     debug = settings.get("debug", False)
 
-    print("STill VIRgin?", VIRGIN)
+    if not VIRGIN:
+        LOCATION = settings.get("record_path", LOCATION)
 
     IP = get_local_ip()
 
@@ -436,7 +447,6 @@ def dashboard():
 
     for camera in cameras:
         folder = os.path.join(LOCATION, camera['name'])
-        print(f"FOLDER LOCATION FOR CAMERA {camera['name']}: {folder}")
         if not os.path.exists(folder):
             return redirect(url_for("setup_web"))
         video_files[camera['name']] = sorted(
@@ -450,6 +460,7 @@ def dashboard():
 
     for camera in cameras:
         folder = os.path.join(SNAPSHOTS, camera['name'])
+        print("FOLDER PATH FOR SNAPSHOTS", folder)
         if not os.path.exists(folder):
             return redirect(url_for("setup_web"))
         pictures[camera['name']] = sorted(
@@ -458,7 +469,7 @@ def dashboard():
             reverse=True
         )
 
-    return render_template("index.html", cameras=cameras, VERSION=VERSION, NAME=NAME, MODE=MODE, IP=IP, available_device_change=0, video_files=video_files, pictures=pictures)
+    return render_template("index.html", uptime=get_uptime(), cameracount=len(cameras), cameras=cameras, VERSION=VERSION, NAME=NAME, MODE=MODE, IP=IP, available_device_change=0, video_files=video_files, pictures=pictures)
 
 @app.route("/kill")
 def kill_all():

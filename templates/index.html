@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>SVigiBerry</title>
+    <title>{{ name }}</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500&display=swap" rel="stylesheet">
@@ -47,6 +47,15 @@
                     camera['fps'] }}</p>
             </div>
             {% endfor %}
+            <br>
+            <div class="camera">
+                <p class="subtext">Version: {{ VERSION }}</p><br>
+                <p class="subtext">Cameras: {{ cameracount }}</p><br>
+                <p class="subtext">Uptime: {{ uptime }}</p><br>
+                <p class="subtext">Instance Name: {{ NAME }}</p><br>
+                <p class="subtext">Instance Mode: {{ MODE }}</p><br>
+                <p class="subtext">Instance IP Address: {{ IP }}</p><br>
+            </div>
         </div>
         <div id="settings" class="tab-content">
             <h2>Settings</h2>
@@ -142,30 +151,33 @@
         </div>
         <div id="pictures" class="tab-content">
             <h2>Pictures</h2>
-            {% for camera_name, files in pictures.items() %}
-            <div class="camera-footage">
-                <h3>Camera: {{ camera_name }}</h3>
-                <hr>
-                {% for file in files %}
-                <div class="picture-preview">
-                    <div class="picture-info">
-                        <p>{{ file }}</p>
+            {% if pictures %}
+                {% for camera_name, files in pictures.items() %}
+                <div class="camera-footage">
+                    <h3>Camera: {{ camera_name }}</h3>
+                    <hr>
+                    {% for file in files %}
+                    <div class="picture-preview">
+                        <div class="picture-info">
+                            <p>{{ file }}</p>
+                        </div>
                     </div>
+                    <img src="/static/snapshots/{{ camera_name }}/{{ file }}" alt="{{ file }}" class="img-preview">
+                    <br><br>
+                    {% endfor %}
                 </div>
-                <img src="/static/snapshots/{{ camera_name }}/{{ file }}" alt="{{ file }}" class="img-preview">
                 <br><br>
                 {% endfor %}
-                
-            </div>
-            <br><br>
-            {% endfor %}
+            {% else %}
+                <p>No pictures available. Please try refreshing your page to see the latest pictures.</p>
+            {% endif %}
         </div>
         <div id="about" class="tab-content">
             <h2>About</h2>
             <p>VigilantBerry v3.0</p>
             <p>&copy; 2024 VigilantBerry. All rights reserved.</p>
             <p>
-                <a href="https://github.com/syntaxerror019/vigilantberry">
+                <a href="https://github.com/syntaxerror019/VigilantBerry-Security">
                     View Source on GitHub
                 </a>
             </p>
