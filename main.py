@@ -585,6 +585,9 @@ def save_camera_data(camera_index):
             # camera["frame_width"] = float(resolution.split("x")[0])
             # camera["frame_height"] = float(resolution.split("x")[1])
 
+            camera["frame_width"] = 640
+            camera["frame_height"] = 480
+
             break
     else:
         return jsonify({"status": "error", "message": "Camera not found."}), 404
