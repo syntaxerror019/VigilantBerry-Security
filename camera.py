@@ -6,9 +6,8 @@ class Camera:
         self.fps = fps
         self.dimensions = dimensions
         self.camera = cv2.VideoCapture(camera_id)
-        self.camera.set(cv2.CAP_PROP_FRAME_WIDTH, dimensions[0])
-        self.camera.set(cv2.CAP_PROP_FRAME_HEIGHT, dimensions[1])
-        self.camera.set(cv2.CAP_PROP_FPS, fps)
+        self.camera.set(cv2.CAP_PROP_FRAME_WIDTH, int(self.dimensions[0]))
+        self.camera.set(cv2.CAP_PROP_FRAME_HEIGHT, int(self.dimensions[1]))
         
     def is_opened(self):
         return self.camera.isOpened()
@@ -22,9 +21,8 @@ class Camera:
 
     def reset_capture(self):
         self.camera = cv2.VideoCapture(self.camera_id)
-        self.camera.set(cv2.CAP_PROP_FRAME_WIDTH, self.dimensions[0])
-        self.camera.set(cv2.CAP_PROP_FRAME_HEIGHT, self.dimensions[1])
-        self.camera.set(cv2.CAP_PROP_FPS, self.fps)
+        self.camera.set(cv2.CAP_PROP_FRAME_WIDTH, int(self.dimensions[0]))
+        self.camera.set(cv2.CAP_PROP_FRAME_HEIGHT, int(self.dimensions[1]))
     
     def release(self):
         self.camera.release()

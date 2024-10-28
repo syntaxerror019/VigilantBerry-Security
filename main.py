@@ -244,18 +244,11 @@ def recording_function(cameras, objs, check_interval=5) -> None:
 
             if frame is None:
                 obj.reset_capture()
-                if not hasattr(obj, 'fallback_counter'):
-                    obj.fallback_counter = 0
-                if obj.fallback_counter < 10:
-                    frame = generate_fallback(int(camera["frame_width"]), int(camera["frame_height"]), "No input")
-                else:
-                    frame = generate_fallback(int(camera["frame_width"]), int(camera["frame_height"]), "Video loss")
 
-                obj.fallback_counter += 1
-                if obj.fallback_counter >= 20:
-                    obj.fallback_counter = 0
+                frame = cv2.imread(os.path.join(app.root_path, "nosignal.png"))
+                frame = cv2.resize(frame, (int(camera["frame_width"]), int(camera["frame_height"])))
 
-                time.sleep(.1)
+                time.sleep(1 / fps)
 
             gray_frame = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
             gray_frame = cv2.GaussianBlur(gray_frame, (21, 21), 0)
