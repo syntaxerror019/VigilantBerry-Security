@@ -18,7 +18,7 @@ apt-get install -y python3 python3-pip git
 
 # Install rich for Python
 print_message "Installing the rich library..."
-pip3 install rich
+pip3 install rich --break-system-packages
 
 # Run the installer.py script
 print_message "Running installer.py..."
