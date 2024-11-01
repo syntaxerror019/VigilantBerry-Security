@@ -2,12 +2,6 @@
 
 The ultimate homebrew security camera system designed to run seamlessly on your Raspberry Pi!
 
-<img align="center" src="https://github-readme-streak-stats.herokuapp.com?user=syntaxerror019&theme=vue-dark&hide_border=true&date_format=M%20j%5B%2C%20Y%5D" alt="My github stats" />
-
-<img align="center" src="https://github-readme-stats.vercel.app/api?username=syntaxerror019&show_icons=true&include_all_commits=true&theme=cobalt&hide_border=true" alt="My github stats" /> 
-
-<img align="center" src="https://github-readme-stats.vercel.app/api/top-langs/?username=syntaxerror019&layout=compact&theme=cobalt&hide_border=true" />
-
 
 ### 1️⃣ Motion Detection & Tracking 🚶‍♂️👁️
 VigilantBerry utilizes advanced algorithms to detect movement in your designated monitoring areas. When motion is detected, the system can trigger recording or send alerts, ensuring you never miss a moment. The tracking feature enables the camera to follow movement within its field of view, providing comprehensive surveillance.
