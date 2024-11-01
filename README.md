@@ -1,6 +1,5 @@
 # 🎉🎉 VigilantBerry - CCTV System for RPi 🎉🎉
-
-The ultimate homebrew security camera system designed to run seamlessly on your Raspberry Pi!
+<sup>The ultimate homebrew security camera system designed to run seamlessly on your Raspberry Pi!</sup>
 
 
 ### 1️⃣ Motion Detection & Tracking 🚶‍♂️👁️
