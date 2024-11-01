@@ -8,6 +8,7 @@
 import cv2, numpy, time, threading, os, logging, sys
 from flask import Flask, render_template, redirect, request, url_for, jsonify, Response, send_file
 from datetime import datetime, timedelta
+from functools import wraps
 from camera import Camera
 import json
 import psutil
@@ -383,9 +384,10 @@ def setup() -> None:
 
 # Decorator to check if the system is in first-time setup mode.
 def virgin_check(f):
+    @wraps(f)
     def decorated_function(*args, **kwargs):
         if VIRGIN:
-            return redirect(url_for("setup_web"))
+            return redirect(url_for('setup_web'))  # Redirects to the "redirected" route if the flag is true
         return f(*args, **kwargs)
     return decorated_function
 
