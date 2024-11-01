@@ -1,4 +1,4 @@
-import cv2
+import cv2, numpy
 
 class Camera:
     def __init__(self, camera_id, fps, dimensions):
@@ -17,6 +17,15 @@ class Camera:
         if not ret:
             print("Error: Could not read frame")
             return None
+        return frame
+    
+    def generate_fallback(self, width, height, text="No signal"):
+        frame = cv2.cvtColor(numpy.random.randint(0, 256, (height, width), dtype=numpy.uint8), cv2.COLOR_GRAY2BGR)
+        font, scale, color, thickness = cv2.FONT_HERSHEY_SIMPLEX, 2, (255, 255, 255), 3
+        text_size = cv2.getTextSize(text, font, scale, thickness)[0]
+        x, y = (width - text_size[0]) // 2, (height + text_size[1]) // 2
+        cv2.rectangle(frame, (x - 10, y - text_size[1] - 10), (x + text_size[0] + 10, y + 10), (0, 0, 0), cv2.FILLED)
+        cv2.putText(frame, text, (x, y), font, scale, color, thickness)
         return frame
 
     def reset_capture(self):
