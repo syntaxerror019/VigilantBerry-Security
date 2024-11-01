@@ -203,151 +203,22 @@ def recording_function(cameras, objs, check_interval=5) -> None:
 
     current_datetime = datetime.now()
 
-    for camera in cameras:
-        snapshot = f"{SNAPSHOTS}/{camera['name']}"
-
-        if not os.path.exists(snapshot):
-            os.makedirs(snapshot)
-
-        folder = f"{LOCATION}/{camera['name']}"
-
-        if not os.path.exists(folder):
-            os.makedirs(folder)
-
-        camera['folder'] = folder  
-
-        filename = os.path.join(folder, f"{camera['name']}_{current_datetime.strftime('%Y-%m-%d_%H-%M-%S')}.mp4")
-        fourcc = cv2.VideoWriter_fourcc(*"mp4v")
-        fps = camera["fps"]
-        size = (int(camera["frame_width"]), int(camera["frame_height"]))
-
-        writers[camera["index"]] = cv2.VideoWriter(filename, fourcc, fps, size)
-
-        camera["start_time"] = time.time()
-
-        # File cleanup every 'check_interval' minutes
-        last_cleanup_time = time.time()
-        cleanup_interval = check_interval * 60
-
     while not kill:
-        current_time = time.time()
+        #current_time = time.time()
 
         for camera, obj in zip(cameras, objs):
-            if current_time - camera["start_time"] >= camera["duration"] * 60:
-                writers[camera["index"]].release()
-                current_datetime = datetime.now()
-                filename = os.path.join(camera["folder"], f"{camera['name']}_{current_datetime.strftime('%Y-%m-%d_%H-%M-%S')}.mp4")
-                writers[camera["index"]] = cv2.VideoWriter(filename, fourcc, fps, size)
-                camera["start_time"] = current_time
+
+            print("Camera: ", camera)
             
             frame = obj.read_frame()
 
-            if frame is None:
-                obj.reset_capture()
-
-                frame = cv2.imread(os.path.join(app.root_path, "nosignal.png"))
-                frame = cv2.resize(frame, (int(camera["frame_width"]), int(camera["frame_height"])))
-
-                time.sleep(1 / fps)
-
-            gray_frame = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
-            gray_frame = cv2.GaussianBlur(gray_frame, (21, 21), 0)
-
-            if 'background' not in camera or 'motion_counter' not in camera or 'last_snapshot_time' not in camera:
-                camera['background'] = gray_frame
-                camera['motion_counter'] = 0
-                camera['last_snapshot_time'] = 0
-                continue
-
-            frame_delta = cv2.absdiff(camera['background'], gray_frame)
-            thresh = cv2.threshold(frame_delta, 25, 255, cv2.THRESH_BINARY)[1]
-
-            thresh = cv2.dilate(thresh, None, iterations=2)
-            contours, _ = cv2.findContours(thresh.copy(), cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
-
-            motion_detected = False
-            min_x, min_y = frame.shape[1], frame.shape[0]
-            max_x, max_y = 0, 0
-
-            for contour in contours:
-                if cv2.contourArea(contour) < 700:
-                    continue
-
-                (x, y, w, h) = cv2.boundingRect(contour)
-                min_x, min_y = min(min_x, x), min(min_y, y)
-                max_x, max_y = max(max_x, x + w), max(max_y, y + h)
-                motion_detected = True
-
-            if motion_detected:
-                camera['motion_counter'] += 1
-            else:
-                camera['motion_counter'] = 0
-
-            if camera['motion_counter'] >= 10:
-                cv2.rectangle(frame, (min_x, min_y), (max_x, max_y), (0, 255, 0), 2)
-                # Save snapshot if 5 seconds have passed since the last snapshot
-                current_time = time.time()
-                if current_time - camera['last_snapshot_time'] >= 5:
-                    snapshot_folder = os.path.join(SNAPSHOTS, camera['name'])
-                    if not os.path.exists(snapshot_folder):
-                        os.makedirs(snapshot_folder)
-                    snapshot_filename = os.path.join(snapshot_folder, f"{camera['name']}_{datetime.now().strftime('%Y-%m-%d_%H-%M-%S')}.jpg")
-                    cv2.imwrite(snapshot_filename, frame)
-                    camera['last_snapshot_time'] = current_time
-
-            # Update the background frame
-            camera['background'] = gray_frame
-
-            current_datetime = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-            camera_name = camera["name"]
-            display_text = f"{current_datetime} | {camera_name}"
-
-            font = cv2.FONT_HERSHEY_SIMPLEX
-            font_scale = 0.8
-            color = (255, 255, 255)  # White color
-            thickness = 2
-
-            text_size = cv2.getTextSize(display_text, font, font_scale, thickness)[0]
-
-            text_x = 10
-            text_y = int(camera["frame_height"]) - 10
-
-            cv2.rectangle(frame,  # black textbox white text
-                          (text_x - 5, text_y - text_size[1] - 5), 
-                          (text_x + text_size[0] + 5, text_y + 5), 
-                          (0, 0, 0), 
-                          cv2.FILLED)
-
-            cv2.putText(frame, display_text, (text_x, text_y), font, font_scale, color, thickness)
-
-            writers[camera["index"]].write(frame)
-            ret, jpeg = cv2.imencode('.jpg', frame)
+            if frame is not None:
+                ret, jpeg = cv2.imencode('.jpg', frame)
+            
             frame = None
 
             if ret:
                 camera_frames[camera["index"]] = jpeg.tobytes()
-
-        if current_time - last_cleanup_time >= cleanup_interval:
-            for camera in cameras:
-                folder = camera["folder"]
-                for file in os.listdir(folder):
-                    if file.endswith(".mp4"):
-                        file_path = os.path.join(folder, file)
-                        file_time = os.path.getctime(file_path)
-                        if current_time - file_time >= camera["age"] * 60:
-                            os.remove(file_path)
-                            logging.info(f"Deleted file: {file_path}")
-
-                folder = os.path.join(SNAPSHOTS, camera["name"])
-                for file in os.listdir(folder):
-                    if file.endswith(".jpg"):
-                        file_path = os.path.join(folder, file)
-                        file_time = os.path.getctime(file_path)
-                        if current_time - file_time >= camera["age"] * 60:
-                            os.remove(file_path)
-                            logging.info(f"Deleted file: {file_path}")
-
-            last_cleanup_time = current_time
 
     for camera, obj in zip(cameras, objs):
         writers[camera["index"]].release()
@@ -564,6 +435,7 @@ def video_feed(camera_index):
             if frame:
                 yield (b'--frame\r\n'
                        b'Content-Type: image/jpeg\r\n\r\n' + frame + b'\r\n\r\n')
+                time.sleep(0.1)
 
     return Response(generate(camera_index),
                     mimetype='multipart/x-mixed-replace; boundary=frame')
@@ -585,8 +457,9 @@ def save_camera_data(camera_index):
             # camera["frame_width"] = float(resolution.split("x")[0])
             # camera["frame_height"] = float(resolution.split("x")[1])
  
-            camera["frame_width"] = 640
-            camera["frame_height"] = 480
+            # Could be common 640x480 resolution, but it is not guaranteed proper operation.
+            # camera["frame_width"] = 320
+            # camera["frame_height"] = 240
             
             break
     else:
@@ -633,8 +506,8 @@ def update_camera_list():
             entry = {
                 "index": camera["index"],
                 "name": "Default_Camera_" + str(camera["index"]),
-                "frame_width": camera["frame_width"],
-                "frame_height": camera["frame_height"],
+                "frame_width": 320,
+                "frame_height": 240,
                 "fps": camera["fps"],
                 "duration": 60, # 60 minutes per recording
                 "age": 4320 # 3 days of footage
@@ -645,7 +518,6 @@ def update_camera_list():
     VIRGIN = False
 
     write_settings(settings)
-
     setup()
     
     return jsonify({"status": "success", "message": "Cameras updated successfully."}), 200

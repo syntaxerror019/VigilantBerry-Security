@@ -42,7 +42,7 @@
             {% for camera in cameras %}
             <div class="camera">
                 <h3>{{ camera['name'] }}</h3>
-                <img class="img-frame" src="/video_feed/{{ camera['index'] }}" alt="{{ camera['name'] }}">
+                <img class="img-frame" src="/video_feed/{{ camera['index'] }}" alt="{{ camera['name'] }}" width="640" height="480">
                 <p class="subtext">Resolution: {{ camera['frame_width'] }}x{{ camera['frame_height'] }}; FPS: {{
                     camera['fps'] }}</p>
             </div>
