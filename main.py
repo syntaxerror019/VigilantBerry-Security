@@ -1,3 +1,10 @@
+##################################################################
+# Version 3.0 of CCTV Security System for RPi.
+# This version will store all data locally on the device.
+# This version also supports multiple cameras.
+##################################################################
+# Miles Hilliard - https://mileshilliard.com/ | https://sntx.dev/
+
 import cv2, numpy, time, threading, os, logging, sys
 from flask import Flask, render_template, redirect, request, url_for, jsonify, Response, send_file
 from datetime import datetime, timedelta
@@ -10,24 +17,18 @@ from datetime import timedelta
 import socket
 import re
 
-##################################################################
-# Version 3.0 of local security camera server.
-# The previous versions utilized cloud or network based storage.
-# This version will store all data locally on the device.
-# This version also supports multiple cameras.
-##################################################################
-# Miles Hilliard - https://mileshilliard.com/ | https://sntx.dev/
-
 app = Flask(__name__)
 
-directory = app.root_path
 default_path = os.path.join(app.root_path, "static", "footage")
 snapshots = os.path.join(app.root_path, "static", "snapshots")
-listed_cameras = []
-kill = False
 
+directory = app.root_path
+
+listed_cameras = []
 camera_frames = {}
 writers = {}
+
+kill = False
 
 if not os.path.exists(default_path):
     os.makedirs(default_path)
@@ -37,11 +38,18 @@ if not os.path.exists(snapshots):
 
 SNAPSHOTS = snapshots
 LOCATION = default_path
+SETTINGS = Path(__file__).resolve().parent / "settings.json"
 VERSION = None
 VIRGIN = None
 NAME = None
 MODE = None
 IP = None
+
+# Recording and livestream resolution
+# This does not affect the resolution of the frames being taken from the camera.
+# This DOES affect the resolution of the frames being saved to the disk.
+DISPLAY_HEIGHT = 480
+DISPLAY_WIDTH = 640
 
 logging.basicConfig(
     level=logging.DEBUG,
@@ -51,36 +59,7 @@ logging.basicConfig(
     ]
 )
 
-def generate_fallback(width, height, text="No signal"):
-    """ No Signal frame for the camera feed. """
-
-    fallback_frame = numpy.random.randint(0, 256, (height, width), dtype=numpy.uint8)
-    fallback_frame = cv2.cvtColor(fallback_frame, cv2.COLOR_GRAY2BGR)
-    
-    font = cv2.FONT_HERSHEY_SIMPLEX
-    font_scale = 2
-    color = (255, 255, 255)  # White color
-    thickness = 3
-
-    text_size = cv2.getTextSize(text, font, font_scale, thickness)[0]
-    
-    # centered text pos
-    text_x = (width - text_size[0]) // 2
-    text_y = (height + text_size[1]) // 2
-    
-    # black padded box around the text
-    padding = 10
-    cv2.rectangle(fallback_frame, 
-                  (text_x - padding, text_y - text_size[1] - padding), 
-                  (text_x + text_size[0] + padding, text_y + padding), 
-                  (0, 0, 0), 
-                  cv2.FILLED)
-    
-    # on top of no signal.
-    cv2.putText(fallback_frame, text, (text_x, text_y), font, font_scale, color, thickness)
-    
-    return fallback_frame
-
+# displayed on dashboard.
 def get_local_ip() -> str:
     try:
         with socket.socket(socket.AF_INET, socket.SOCK_DGRAM) as s:
@@ -89,22 +68,20 @@ def get_local_ip() -> str:
     except Exception:
         return "Unable to get IP address"
 
+# TODO: Re-make this
 def restart_script() -> None:
-    """Restarts the current script."""
-
     logging.info("Restarting script...")
-
-    global kill
-    kill = True
-
-    time.sleep(3) # Wait for threads to close TODO: Make this more elegant
-
-    kill = False
+    set_kill_flag(True)
+    time.sleep(3) # TODO: Make this more elegant
+    set_kill_flag(False)
     setup()
 
-def read_settings() -> dict:
-    if not os.path.exists(os.path.join(os.path.dirname(os.path.abspath(sys.argv[0])), "settings.json")):
-        default_settings = {
+def set_kill_flag(state: bool):
+    global kill
+    kill = state
+
+def default_settings() -> dict:
+    default_settings = {
             "version": "3.6.6",
             "virgin": True,
             "debug": False,
@@ -116,32 +93,37 @@ def read_settings() -> dict:
                 ]
             }
         }
-        write_settings(default_settings)
-        return default_settings
-    
-    with open(os.path.join(os.path.dirname(os.path.abspath(sys.argv[0])), "settings.json"), "r") as f:
-        content = f.read()
-        if content == "":
-            return None
-        return json.loads(content)
+    write_settings(default_settings)
+    return default_settings
 
+# read json settings. if not available, use predefined.
+def read_settings() -> dict:
+    if not SETTINGS.exists():
+        return default_settings()
+    
+    try:
+        with open(SETTINGS, "r") as f:
+            content = f.read().strip()
+            if not content:
+                return default_settings()
+            return json.loads(content)
+    except json.JSONDecodeError:
+        logging.error("Error decoding JSON from settings file.")
+        return default_settings()
+
+# save to disk.
 def write_settings(settings) -> None:
-    with open("settings.json", "w") as file:
+    with open(SETTINGS, "w") as file:
         json.dump(settings, file, indent=4)
 
+# modify var in cam settings... TODO: make more elegant
 def update_camera_entry(camera_statuses, target_index, updates) -> None:
-    """
-    Update the fields of a specific camera status entry.
-
-    :param camera_statuses: List of camera status dictionaries.
-    :param target_index: Index of the camera to update.
-    :param updates: Dictionary of fields to update with their new values.
-    """
     for status in camera_statuses:
         if status['index'] == target_index:
             status.update(updates)
             break
 
+# TODO: Add support for more OS. Works with RPi OS. Does not with RPi Ubuntu Server!
 def get_cpu_usage() -> float:
     return psutil.cpu_percent(interval=1)
 
@@ -175,6 +157,7 @@ def get_temperature() -> str:
     except Exception as e:
         return str(e)
 
+# not sure how supported this is across OS but it works for Ubuntu Server and RPI os.
 def get_uptime() -> str:
     with open('/proc/uptime', 'r') as f:
         uptime_seconds = float(f.readline().split()[0])
@@ -182,6 +165,7 @@ def get_uptime() -> str:
     uptime = str(timedelta(seconds=uptime_seconds))
     return uptime
 
+# Show connected USB cameras.
 def list_cameras() -> list:
     available_cameras = []
     for index in range(10):  # Check first 10 indices
@@ -198,144 +182,139 @@ def list_cameras() -> list:
         cap.release()
     return available_cameras
 
+def directory_check(directory) -> None:
+    if not os.path.exists(directory):
+        os.makedirs(directory)
+
+def text_overlay(frame, text) -> None:
+    font = cv2.FONT_HERSHEY_SIMPLEX
+    font_scale = 0.8
+    color = (255, 255, 255)  # White color
+    thickness = 2
+
+    text_size = cv2.getTextSize(text, font, font_scale, thickness)[0]
+
+    text_x = 10
+    text_y = int(DISPLAY_HEIGHT) - 10
+
+    cv2.rectangle(frame,  # black textbox white text
+                (text_x - 5, text_y - text_size[1] - 5), 
+                (text_x + text_size[0] + 5, text_y + 5), 
+                (0, 0, 0), 
+                cv2.FILLED)
+
+    cv2.putText(frame, text, (text_x, text_y), font, font_scale, color, thickness)
+
+def format_overlay(camera_name) -> str:
+        current_datetime = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+        return f"{current_datetime} | {camera_name}"
+
+def remove_files(folder, age, ctime, extension) -> None:
+    for file in os.listdir(folder):
+        if file.endswith(extension):
+            file_path = os.path.join(folder, file)
+            file_time = os.path.getctime(file_path)
+            if ctime - file_time >= age * 60:
+                os.remove(file_path)
+                logging.info(f"Deleted file: {file_path}")
+
 def recording_function(cameras, objs, check_interval=5) -> None:
     """Recording thread for each all cameras with optimized CPU usage."""
 
     current_datetime = datetime.now()
     
     for camera in cameras:
-        snapshot = f"{SNAPSHOTS}/{camera['name']}"
+        directory_check(f"{SNAPSHOTS}/{camera['name']}")
+        directory_check(f"{LOCATION}/{camera['name']}")
 
-        if not os.path.exists(snapshot):
-            os.makedirs(snapshot)
-
-        folder = f"{LOCATION}/{camera['name']}"
-
-        if not os.path.exists(folder):
-            os.makedirs(folder)
-
+        folder = os.path.join(LOCATION, camera['name'])
         camera['folder'] = folder  
 
-        filename = os.path.join(folder, f"{camera['name']}_{current_datetime.strftime('%Y-%m-%d_%H-%M-%S')}.mp4")
+        filename = os.path.join(camera['folder'], f"{camera['name']}_{current_datetime.strftime('%Y-%m-%d_%H-%M-%S')}.mp4")
         fourcc = cv2.VideoWriter_fourcc(*"mp4v")
         fps = camera["fps"]
-        size = (int(camera["frame_width"]), int(camera["frame_height"]))
+        size = (DISPLAY_WIDTH, DISPLAY_HEIGHT)
 
         writers[camera["index"]] = cv2.VideoWriter(filename, fourcc, fps, size)
-
         camera["start_time"] = time.time()
 
         # File cleanup every 'check_interval' minutes
         last_cleanup_time = time.time()
         cleanup_interval = check_interval * 60
+    try:
+        while not kill:
+                current_time = time.time()
 
-    while not kill:
-            current_time = time.time()
-
-            for camera, obj in zip(cameras, objs):
-                if current_time - camera["start_time"] >= camera["duration"] * 60:
-                    writers[camera["index"]].release()
-                    current_datetime = datetime.now()
-                    filename = os.path.join(camera["folder"], f"{camera['name']}_{current_datetime.strftime('%Y-%m-%d_%H-%M-%S')}.mp4")
-                    writers[camera["index"]] = cv2.VideoWriter(filename, fourcc, fps, size)
-                    camera["start_time"] = current_time
+                for camera, obj in zip(cameras, objs):
+                    if current_time - camera["start_time"] >= camera["duration"] * 60:
+                        writers[camera["index"]].release()
+                        current_datetime = datetime.now()
+                        filename = os.path.join(camera["folder"], f"{camera['name']}_{current_datetime.strftime('%Y-%m-%d_%H-%M-%S')}.mp4")
+                        writers[camera["index"]] = cv2.VideoWriter(filename, fourcc, fps, size)
+                        camera["start_time"] = current_time
+                    
+                    frame = obj.read_frame()
                 
-                frame = obj.read_frame()
+                    if frame is None:
+                        obj.reset_capture()
+                        frame = obj.generate_fallback(640, 480, "No signal")
+                    else:
+                        frame = cv2.resize(frame, (640, 480))
 
-                if frame is None:
-                    obj.reset_capture()
+                    text_overlay(frame, format_overlay(camera["name"]))
 
-                    frame = cv2.imread(os.path.join(app.root_path, "nosignal.png"))
-                    frame = cv2.resize(frame, (int(camera["frame_width"]), int(camera["frame_height"])))
+                    writers[camera["index"]].write(frame)
+                    ret, jpeg = cv2.imencode('.jpg', frame)
+                    
+                    if ret:
+                        camera_frames[camera["index"]] = jpeg.tobytes()
 
-                    time.sleep(1 / fps)
+                if current_time - last_cleanup_time >= cleanup_interval:
+                    for camera in cameras:
+                        age = camera["age"]
 
-                current_datetime = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-                camera_name = camera["name"]
-                display_text = f"{current_datetime} | {camera_name}"
+                        # remove snapshots and video files
+                        remove_files(camera["folder"], age, current_time, ".mp4")
+                        remove_files(os.path.join(SNAPSHOTS, camera["name"]), age, current_time, ".jpg")
 
-                font = cv2.FONT_HERSHEY_SIMPLEX
-                font_scale = 0.2
-                color = (255, 255, 255)  # White color
-                thickness = 2
+                    last_cleanup_time = current_time
+    except KeyboardInterrupt:
+        set_kill_flag(True)
 
-                text_size = cv2.getTextSize(display_text, font, font_scale, thickness)[0]
-
-                text_x = 10
-                text_y = int(camera["frame_height"]) - 10
-
-                cv2.rectangle(frame,  # black textbox white text
-                            (text_x - 5, text_y - text_size[1] - 5), 
-                            (text_x + text_size[0] + 5, text_y + 5), 
-                            (0, 0, 0), 
-                            cv2.FILLED)
-
-                cv2.putText(frame, display_text, (text_x, text_y), font, font_scale, color, thickness)
-
-                writers[camera["index"]].write(frame)
-                ret, jpeg = cv2.imencode('.jpg', frame)
-                
-                #frame = None
-
-                if ret:
-                    camera_frames[camera["index"]] = jpeg.tobytes()
-
-            if current_time - last_cleanup_time >= cleanup_interval:
-                for camera in cameras:
-                    folder = camera["folder"]
-                    for file in os.listdir(folder):
-                        if file.endswith(".mp4"):
-                            file_path = os.path.join(folder, file)
-                            file_time = os.path.getctime(file_path)
-                            if current_time - file_time >= camera["age"] * 60:
-                                os.remove(file_path)
-                                logging.info(f"Deleted file: {file_path}")
-
-                    folder = os.path.join(SNAPSHOTS, camera["name"])
-                    for file in os.listdir(folder):
-                        if file.endswith(".jpg"):
-                            file_path = os.path.join(folder, file)
-                            file_time = os.path.getctime(file_path)
-                            if current_time - file_time >= camera["age"] * 60:
-                                os.remove(file_path)
-                                logging.info(f"Deleted file: {file_path}")
-
-                last_cleanup_time = current_time
-
+    # clean up writers and camera objects
     for camera, obj in zip(cameras, objs):
         writers[camera["index"]].release()
         obj.release()
 
     logging.info(f"Recording stopped.")
 
+def get_files(cameras, folder_base, extension):
+    files = {}
+    for camera in cameras:
+        folder = os.path.join(folder_base, camera['name'])
+        if not os.path.exists(folder):
+            return redirect(url_for("setup_web"))
+        files[camera['name']] = sorted(
+            [file for file in os.listdir(folder) if file.endswith(extension)],
+            key=lambda x: os.path.getctime(os.path.join(folder, x)),
+            reverse=True
+        )
+    return files
 
 def initialize_cameras(cameras) -> tuple:
     """ Initialize cameras based on the settings. """
 
     camera_objects = []
 
-    is_ok = True
-
     for camera in cameras:
         logging.info(f"Initializing camera {camera['index']} ({camera['frame_width']}x{camera['frame_height']})...")
 
         cam = Camera(camera["index"], camera["fps"], (camera["frame_width"], camera["frame_height"]))
-
-        """ 
-        if not cam.is_opened():
-            logging.critical(f"Camera {camera['index']} could not be initialized.")
-            logging.critical("Cameras may have changed since the last settings were saved.")
-            logging.critical(f"Available cameras: {list_cameras()}")
-            logging.critical("exiting...")
-            is_ok = False
-            sys.exit() 
-            """
-
         camera_objects.append(cam)
 
         logging.info(f"Camera {camera['index']} ({camera['frame_width']}x{camera['frame_height']}) initialized.")
 
-    return is_ok, camera_objects
+    return True, camera_objects
               
 
 def setup() -> None:
@@ -400,50 +379,30 @@ def setup() -> None:
         logging.info("Starting debug mode...")
         
 
-#### Flask Endpoints ####
+###### Flask Endpoints ######
 
+# Decorator to check if the system is in first-time setup mode.
+def virgin_check(f):
+    def decorated_function(*args, **kwargs):
+        if VIRGIN:
+            return redirect(url_for("setup_web"))
+        return f(*args, **kwargs)
+    return decorated_function
 
 @app.route("/")
+@virgin_check
 def index():
-    if VIRGIN:
-        return redirect(url_for("setup_web"))
-    
     return redirect(url_for("dashboard"))
 
 @app.route("/dashboard")
+@virgin_check
 def dashboard():
     global listed_cameras
 
-    if VIRGIN:
-        return redirect(url_for("setup_web"))
-
     cameras = read_settings()["settings"]["monitor.cameras"]
 
-    # Get video files to be rendered on the dashboard page
-    video_files = {}
-
-    for camera in cameras:
-        folder = os.path.join(LOCATION, camera['name'])
-        if not os.path.exists(folder):
-            return redirect(url_for("setup_web"))
-        video_files[camera['name']] = sorted(
-            [file for file in os.listdir(folder) if file.endswith(".mp4")],
-            key=lambda x: os.path.getctime(os.path.join(folder, x)),
-            reverse=True
-        )
-
-    # Get snapshots to be rendered on the dashboard page
-    pictures = {}
-
-    for camera in cameras:
-        folder = os.path.join(SNAPSHOTS, camera['name'])
-        if not os.path.exists(folder):
-            return redirect(url_for("setup_web"))
-        pictures[camera['name']] = sorted(
-            [file for file in os.listdir(folder) if file.endswith(".jpg")],
-            key=lambda x: os.path.getctime(os.path.join(folder, x)),
-            reverse=True
-        )
+    video_files = get_files(cameras, LOCATION, ".mp4")
+    pictures = get_files(cameras, SNAPSHOTS, ".jpg")
 
     return render_template("index.html", cpu=get_cpu_usage(), memory=get_memory_usage(), disk=get_disk_usage(), temp=get_temperature(), uptime=get_uptime(), cameracount=len(cameras), cameras=cameras, VERSION=VERSION, NAME=NAME, MODE=MODE, IP=IP, available_device_change=0, video_files=video_files, pictures=pictures)
 
@@ -451,7 +410,7 @@ def dashboard():
 def kill_all():
     global kill
     kill = True
-    time.sleep(1)  # Wait for threads to close TODO: Make this more elegant
+    time.sleep(1) # TODO: Make this more elegant
 
     # Terminate all threads
     for thread in threading.enumerate():
@@ -466,6 +425,7 @@ def kill_all():
     os._exit(0)
 
 @app.route("/download/<string:camera_name>/<string:file_name>")
+@virgin_check
 def download(camera_name, file_name):
     file_path = os.path.join(LOCATION, camera_name, file_name)
     if os.path.exists(file_path):
@@ -474,6 +434,7 @@ def download(camera_name, file_name):
         return jsonify({"status": "error", "message": "File not found."}), 404
     
 @app.route("/view/<string:camera_name>/<string:file_name>")
+@virgin_check
 def view(camera_name, file_name):
     video_path = os.path.join(LOCATION, camera_name, file_name)
 
@@ -509,6 +470,7 @@ def view(camera_name, file_name):
         return jsonify({"status": "error", "message": "File not found."}), 404
 
 @app.route('/video_feed/<int:camera_index>')
+@virgin_check
 def video_feed(camera_index):
     """Video streaming route. Returns the video feed for the given camera index."""
     def generate(camera_index):
@@ -547,30 +509,6 @@ def save_camera_data(camera_index):
     restart_script()
 
     return redirect(url_for("dashboard"))
-
-@app.route('/save_app', methods=["POST"])
-def save_data(camera_index):
-    settings = read_settings()
-
-    var = request.json["variable"]
-    val = request.json["value"]
-
-    settings[var] = val
-
-    return jsonify({"status": "success", "message": "Camera settings saved successfully."}), 200
-
-    for camera in cameras:
-        if camera["index"] == camera_index:
-            camera["name"] = request.json["name"]
-            camera["duration"] = request.json["duration"]
-            camera["age"] = request.json["age"]
-            break
-    else:
-        return jsonify({"status": "error", "message": "Camera not found."}), 404
-    
-    write_settings(settings)
-
-    return jsonify({"status": "success", "message": "Camera settings saved successfully."}), 200
 
 @app.route("/camera_selection", methods=["POST"])
 def update_camera_list():
@@ -619,8 +557,7 @@ def setup_web():
     if not cameras:
         logging.critical("No cameras found.")
         return "<h1>No cameras found on the system.</h1><p>There were no usable cameras found on your system. Please check all connections and reload this page.</p>", 500
-    # if not VIRGIN:
-    #    return redirect(url_for("/"))
+    
     return render_template("setup.html", cameras=cameras, default_location=LOCATION)
 
 if __name__ == "__main__":
