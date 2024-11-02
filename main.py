@@ -262,6 +262,52 @@ def recording_function(cameras, objs, check_interval=5) -> None:
                     else:
                         frame = cv2.resize(frame, (640, 480))
 
+                    gray_frame = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
+                    gray_frame = cv2.GaussianBlur(gray_frame, (21, 21), 0)
+
+                    if 'background' not in camera or 'motion_counter' not in camera or 'last_snapshot_time' not in camera:
+                        camera['background'] = gray_frame
+                        camera['motion_counter'] = 0
+                        camera['last_snapshot_time'] = 0
+                        continue
+
+                    frame_delta = cv2.absdiff(camera['background'], gray_frame)
+                    thresh = cv2.threshold(frame_delta, 25, 255, cv2.THRESH_BINARY)[1]
+
+                    thresh = cv2.dilate(thresh, None, iterations=2)
+                    contours, _ = cv2.findContours(thresh.copy(), cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+
+                    motion_detected = False
+                    min_x, min_y = frame.shape[1], frame.shape[0]
+                    max_x, max_y = 0, 0
+
+                    for contour in contours:
+                        if cv2.contourArea(contour) < 700:
+                            continue
+
+                        (x, y, w, h) = cv2.boundingRect(contour)
+                        min_x, min_y = min(min_x, x), min(min_y, y)
+                        max_x, max_y = max(max_x, x + w), max(max_y, y + h)
+                        motion_detected = True
+
+                    if motion_detected:
+                        camera['motion_counter'] += 1
+                    else:
+                        camera['motion_counter'] = 0
+
+                    if camera['motion_counter'] >= 10:
+                        cv2.rectangle(frame, (min_x, min_y), (max_x, max_y), (0, 255, 0), 2)
+                        # Save snapshot if 5 seconds have passed since the last snapshot
+                        current_time = time.time()
+                        if current_time - camera['last_snapshot_time'] >= 5:
+                            snapshot_folder = os.path.join(SNAPSHOTS, camera['name'])
+                            snapshot_filename = os.path.join(snapshot_folder, f"{camera['name']}_{datetime.now().strftime('%Y-%m-%d_%H-%M-%S')}.jpg")
+                            cv2.imwrite(snapshot_filename, frame)
+                            camera['last_snapshot_time'] = current_time
+
+                    # Update the background frame
+                    camera['background'] = gray_frame
+
                     text_overlay(frame, format_overlay(camera["name"]))
 
                     writers[camera["index"]].write(frame)
@@ -269,6 +315,7 @@ def recording_function(cameras, objs, check_interval=5) -> None:
                     
                     if ret:
                         camera_frames[camera["index"]] = jpeg.tobytes()
+
 
                 if current_time - last_cleanup_time >= cleanup_interval:
                     for camera in cameras:

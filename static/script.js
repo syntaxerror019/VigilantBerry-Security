@@ -141,13 +141,12 @@ function finish() {
         },
         body: JSON.stringify({cameras: selectedCameras, path: path})
     });
-
+    spinner_overlay("Saving your settings...");
     const checkAlive = setInterval(() => {
         if (isAlive()) {
             clearInterval(checkAlive);
             close_overlay();
-        } else {
-            spinner_overlay("Saving your settings...");
+            window.location.href = '/'; // redirect to home page
         }
     }, 2000);
 }
