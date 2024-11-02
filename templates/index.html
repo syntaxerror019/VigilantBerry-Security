@@ -154,30 +154,42 @@
         </div>
         <div id="pictures" class="tab-content">
             <h2>Pictures</h2>
-                {% if pictures %}
-                    {% for camera_name, files in pictures.items() %}
-                    <div class="camera-footage">
-                        <h3>Camera: {{ camera_name }}</h3>
-                        <hr>
-                        {% if files %}
-                            {% for file in files %}
-                            <div class="picture-preview">
-                                <div class="picture-info">
-                                    <p>{{ file }}</p>
-                                </div>
-                            </div>
-                            <img src="/static/snapshots/{{ camera_name }}/{{ file }}" alt="{{ file }}" class="img-preview">
-                            <br><br>
-                            {% endfor %}
-                        {% else %}
-                            <p>No pictures available for this camera. Please refresh to see the latest images.</p>
-                        {% endif %}
-                    </div>
-                    <br><br>
+            {% if pictures %}
+            {% for camera_name, files in pictures.items() %}
+            <div class="camera-footage">
+                <h3>Camera: {{ camera_name }}</h3>
+                <hr>
+                {% if files %}
+                <table>
+                    <p>Latest motion detection:</p>
+                    <a href="/static/snapshots/{{ camera_name }}/{{ files[0] }}"><img title="Click to enlarge." src="/static/snapshots/{{ camera_name }}/{{ files[0] }}" alt="{{ files[0] }}" class="preview-image"></a>
+                    <br>
+                    <thead>
+                    <tr>
+                        <th>File Name</th>
+                        <th>View</th>
+                        <th>Download</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    {% for file in files %}
+                    <tr>
+                        <td>{{ file }}</td>
+                        <td><a href="/static/snapshots/{{ camera_name }}/{{ file }}" target="_blank">View</a></td>
+                        <td><a href="/static/snapshots/{{ camera_name }}/{{ file }}" download>Download</a></td>
+                    </tr>
                     {% endfor %}
+                    </tbody>
+                </table>
                 {% else %}
-                    <p>No pictures available. Please refresh to see the latest images.</p>
+                <p>No pictures available for this camera. Please refresh to see the latest images.</p>
                 {% endif %}
+            </div>
+            <br><br>
+            {% endfor %}
+            {% else %}
+            <p>No pictures available. Please refresh to see the latest images.</p>
+            {% endif %}
         </div>
         <div id="about" class="tab-content">
             <h2>About</h2>

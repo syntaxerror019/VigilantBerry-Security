@@ -134,6 +134,13 @@ tr:hover {
     max-width: 100vw; /* Ensure it fits within the viewport */
 }
 
+.preview-image {
+    width: 10%;
+    height: auto;
+    margin: 10px 0;
+    border-radius: 10px;
+}
+
 input[type="text"], input[type="password"], input[type="email"], input[type="number"], select {
     width: 50%;
     padding: 10px;
