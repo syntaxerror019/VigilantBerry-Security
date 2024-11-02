@@ -257,7 +257,9 @@ else:
     console.print("VigilantBerry will not start automatically on boot.", style="bold")
 
 console.print()
+console.print("Finished!")
+console.print()
 
-console.print("Finished! If you suspect an error, please check the log file for a persistent record of the installation process.", style="italic")
+console.print("If you suspect an error, please check the log file for a persistent record of the installation process.", style="italic")
 console.print()
 console.print("[bold]Thank you for using VigilantBerry![/bold]")
