@@ -7,5 +7,6 @@ venv/
 *.sublime-project
 *.sublime-workspace
 settings.json
+changelog.txt
 static/snapshots/
 static/footage/
