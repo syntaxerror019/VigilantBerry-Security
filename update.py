@@ -1,5 +1,6 @@
 import subprocess
 import argparse
+import time
 
 def fetch_updates():
     """Fetch updates from the remote repository."""
@@ -25,16 +26,18 @@ def apply_updates():
     subprocess.run(["git", "reset", "--hard", "origin/main"], check=True)
 
 def main(apply):
-    fetch_updates()
-    changelog = get_changelog()
+    while not apply:
+        fetch_updates()
+        changelog = get_changelog()
 
-    print("Changelog:")
-    print(changelog)
+        if changelog != "No new updates available.":
+            save_changelog_to_file(changelog)
+        
+        time.sleep(60) # update check every minute!
 
-    if changelog != "No new updates available.":
-        save_changelog_to_file(changelog)
-        if apply:
-            apply_updates()
+    if apply:
+        fetch_updates()
+        apply_updates()
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Update script")

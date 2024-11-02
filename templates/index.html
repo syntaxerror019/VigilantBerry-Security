@@ -216,6 +216,12 @@
         if ("{{ available_device_change }}" == "1") {
             notify("A change in available cameras has been detected.")
         }
+        const UPDATE = "{{ update }}"
+        if (UPDATE != "no") {
+            if (confirm(`🛈 There is a new update available for VigilantBerry. 🛈\n⬆️ Would you like to update now? ⬆️\n\n⚠️ Updates are recommended for security and feature enhancements. ⚠️\n\nPlease note that this will reboot the system. Check back at this page in a few minutes once it has completed.\n\nAdditional Information:\n${UPDATE}`)) {
+                window.location.href = "/update"
+            }
+        }
     </script>
     <script>
         close_overlay();

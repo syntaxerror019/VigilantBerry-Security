@@ -1,7 +1,8 @@
 #!/bin/bash
 
 SERVICE_NAME="vigiberry.service"
-SCRIPT_PATH="vigiberry.sh"  # Path to your script
+SCRIPT_DIR=$(dirname "$(realpath "$0")")
+SCRIPT_PATH="$SCRIPT_DIR/vigiberry.sh"  # Path to your script
 USER_NAME=$(whoami)
 
 # ensure the shell script is executable
@@ -13,7 +14,7 @@ Description=Your AIO CCTV Security Camera System!
 After=network.target
 
 [Service]
-ExecStart=$SCRIPT_PATH
+ExecStart=sudo $SCRIPT_PATH
 User=$USER_NAME
 
 [Install]

@@ -16,6 +16,7 @@ import subprocess
 from pathlib import Path
 from datetime import timedelta
 import socket
+import signal
 import re
 
 app = Flask(__name__)
@@ -165,6 +166,13 @@ def get_uptime() -> str:
 
     uptime = str(timedelta(seconds=uptime_seconds))
     return uptime
+
+def check_updates():
+    try:
+        with open("changelog.txt", "r") as file:
+            return file.read()
+    except FileNotFoundError:
+        return "no"
 
 # Show connected USB cameras.
 def list_cameras() -> list:
@@ -453,7 +461,7 @@ def dashboard():
     video_files = get_files(cameras, LOCATION, ".mp4")
     pictures = get_files(cameras, SNAPSHOTS, ".jpg")
 
-    return render_template("index.html", cpu=get_cpu_usage(), memory=get_memory_usage(), disk=get_disk_usage(), temp=get_temperature(), uptime=get_uptime(), cameracount=len(cameras), cameras=cameras, VERSION=VERSION, NAME=NAME, MODE=MODE, IP=IP, available_device_change=0, video_files=video_files, pictures=pictures)
+    return render_template("index.html", update=check_updates(), cpu=get_cpu_usage(), memory=get_memory_usage(), disk=get_disk_usage(), temp=get_temperature(), uptime=get_uptime(), cameracount=len(cameras), cameras=cameras, VERSION=VERSION, NAME=NAME, MODE=MODE, IP=IP, available_device_change=0, video_files=video_files, pictures=pictures)
 
 @app.route("/kill")
 def kill_all():
@@ -476,6 +484,15 @@ def kill_all():
 @app.route("/alive", methods=["GET", "POST"])
 def alive():
     return jsonify({"status": "success", "message": "System is alive."}), 200
+
+@app.route("/update", methods=["GET", "POST"])
+def update():
+    try:
+        subprocess.run(["sudo", "python3", "update.py", '--apply'], check=True)
+        logging.info("Update successful.")
+    except subprocess.CalledProcessError as e:
+        logging.error(f"Update failed: {e}")
+    os.system("sudo reboot now")
 
 @app.route("/download/<string:camera_name>/<string:file_name>")
 @virgin_check
@@ -614,5 +631,8 @@ def setup_web():
     return render_template("setup.html", cameras=cameras, default_location=LOCATION)
 
 if __name__ == "__main__":
+    if os.geteuid() != 0:
+        logging.critical("This script must be run as root!")
+        sys.exit(1)
     threading.Thread(target=app.run, kwargs={"host": "0.0.0.0", "port": 8080}).start() # TODO: Make this more elegant
     setup()

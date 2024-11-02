@@ -149,7 +149,8 @@ def install_dependencies():
         "libswscale-dev",
         "python3-dev",
         "python3-pip",
-        "python3-venv"
+        "python3-venv",
+        "systemd"
     ]
     command = ["sudo", "apt-get", "install", "-y"] + dependencies
     run_command(command, "Installing dependencies...")
