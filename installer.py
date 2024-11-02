@@ -246,6 +246,18 @@ test_opencv()
 console.clear()
 
 console.print("\n### Installation process finished ###", style="bold green")
-console.print("If you suspect an error, please check the log file for a persistent record of the installation process.", style="italic")
+
+console.print("Would you like VigilantBerry to start automatically on boot? [Y/n]", style="bold")
+response = input().strip().lower()
+if response != "n":
+    console.print("Adding VigilantBerry to startup applications...", style="bold")
+    run_command(["bash", "startup.sh"], "Adding VigilantBerry to startup applications...")
+    console.print("VigilantBerry added to startup applications!", style="bold green")
+else:
+    console.print("VigilantBerry will not start automatically on boot.", style="bold")
+
+console.print()
+
+console.print("Finished! If you suspect an error, please check the log file for a persistent record of the installation process.", style="italic")
 console.print()
 console.print("[bold]Thank you for using VigilantBerry![/bold]")
