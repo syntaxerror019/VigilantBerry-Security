@@ -25,3 +25,26 @@ sudo systemctl enable $SERVICE_NAME
 sudo systemctl start $SERVICE_NAME
 
 sudo systemctl status $SERVICE_NAME
+
+
+
+SERVICE_NAME="vigiberryupdatesystem.service"
+SCRIPT_PATH="$SCRIPT_DIR/update.py"
+
+# create the systemd service file
+echo "[Unit]
+Description=vigiberry update system
+After=network.target
+
+[Service]
+ExecStart=python3 $SCRIPT_PATH
+User=$USER_NAME
+
+[Install]
+WantedBy=multi-user.target" | sudo tee /etc/systemd/system/$SERVICE_NAME > /dev/null
+
+sudo systemctl daemon-reload
+sudo systemctl enable $SERVICE_NAME
+sudo systemctl start $SERVICE_NAME
+
+sudo systemctl status $SERVICE_NAME
