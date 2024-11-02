@@ -27,6 +27,10 @@
             <li><a href="#help"><i class="fas fa-question-circle"></i>Additional Help</a></li>
         </ul>
     </div>
+    <div id="spinner-overlay">
+        <div class="spinner"></div>
+        <p id="spinner-text">Loading...</p>
+    </div>
     <div id="notification" class="notification hidden">
         <span>There was an error loading the error message.</span>
         <close id="closeBtn" class="close-btn">×</close>
@@ -79,5 +83,8 @@
         </div>
     </div>
     <script src="{{ url_for('static', filename='script.js') }}"></script>
+    <script>
+        close_overlay();
+    </script>
 </body>
 </html>

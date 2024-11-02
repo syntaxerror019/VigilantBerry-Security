@@ -16,12 +16,19 @@ document.addEventListener('DOMContentLoaded', function() {
     document.querySelectorAll('.cameraForm').forEach(function(form) {
         form.addEventListener('submit', function(event) {
             event.preventDefault(); // Prevent the default form submission
-
-            setTimeout(() => {
-                window.location.href = '/';
-            }, 8000);
-
             form.submit();
+
+            spinner_overlay("Saving your settings...");
+
+            const checkAlive = setInterval(() => {
+                if (isAlive()) {
+                    clearInterval(checkAlive);
+                    setTimeout(() => {
+                        close_overlay();
+                        window.location.reload(); //get new data
+                    }, 3000);
+                }
+            }, 1000);
         });
     });
 
@@ -64,8 +71,6 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         });
     });
-    
-
 
     hamburger.addEventListener('click', function() {
         sidebar.classList.toggle('open');
@@ -73,14 +78,40 @@ document.addEventListener('DOMContentLoaded', function() {
 
 });
 
+function isAlive() {
+    return fetch('/alive')
+        .then(response => response.status === 200)
+        .catch(() => false);
+};
 
-function notify(message) {
-    const closeBtn = document.getElementById('closeBtn');
-    const notification = document.getElementById('notification');
-    const notificationText = notification.querySelector('span'); // Select the span inside notification
+function spinner_overlay(text) {
+    document.getElementById("spinner-text").textContent = text;
+    document.getElementById("spinner-overlay").style.display = "flex";
+}
 
-    notificationText.textContent = message;
-    
+function close_overlay() {
+    document.getElementById("spinner-overlay").style.display = "none";
+}
+
+function notify(text, header, type = 'alert-info') {
+    const notification = document.getElementsByClassName("notification")[0];
+    const message = notification.querySelector('span');
+
+    if (type === 'alert-danger') {
+        text = `⛔ ${text}`;
+    }
+    else if (type === 'alert-warning') {
+        text = `⚠️ ${text}`;
+    }
+    else if (type === 'alert-success') {
+        text = `✅ ${text}`;
+    }
+    else {
+        text = `ℹ️ ${text}`;
+    }
+
+    message.textContent = text;
+
     notification.classList.remove('hidden');
     notification.classList.add('show');
 }
@@ -111,11 +142,14 @@ function finish() {
         body: JSON.stringify({cameras: selectedCameras, path: path})
     });
 
-    notify("⚠️ Please do not leave! Redirecting to the home page...");
-
-    setTimeout(() => {
-        window.location.href = '/';
-    }, 5000);
+    const checkAlive = setInterval(() => {
+        if (isAlive()) {
+            clearInterval(checkAlive);
+            close_overlay();
+        } else {
+            spinner_overlay("Saving your settings...");
+        }
+    }, 2000);
 }
 
 function next(currentId, upcomingId) {
@@ -147,12 +181,12 @@ function check_path() {
         if (data.code === 200) {
             finish();
         } else {
-            notify(data.message);
+            notify(data.message, 'error', 'alert-danger');
         }
     })
     .catch(error => {
         // Handle any errors that occurred during the request
         console.error('Error:', error);
-        alert('An error occurred while processing your request. Please try again.');
+        notify('An error occurred while, please try again later.', "Error", "alert-danger");
     });
 }

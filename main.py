@@ -426,6 +426,10 @@ def kill_all():
     logging.info("All threads terminated. Exiting application.")
     os._exit(0)
 
+@app.route("/alive", methods=["GET", "POST"])
+def alive():
+    return jsonify({"status": "success", "message": "System is alive."}), 200
+
 @app.route("/download/<string:camera_name>/<string:file_name>")
 @virgin_check
 def download(camera_name, file_name):
@@ -510,7 +514,7 @@ def save_camera_data(camera_index):
     write_settings(settings)
     restart_script()
 
-    return redirect(url_for("dashboard"))
+    return '', 204
 
 @app.route("/camera_selection", methods=["POST"])
 def update_camera_list():

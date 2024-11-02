@@ -8,6 +8,7 @@
     <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500&display=swap" rel="stylesheet">
+    <link href="https://maxcdn.bootstrapcdn.com/font-awesome/4.3.0/css/font-awesome.min.css" rel="stylesheet">
 </head>
 
 <body>
@@ -31,6 +32,10 @@
             <li><a href="#pictures"><i class="fas fa-image"></i> Pictures</a></li>
             <li><a href="#about"><i class="fas fa-info-circle"></i> About</a></li>
         </ul>
+    </div>
+    <div id="spinner-overlay">
+        <div class="spinner"></div>
+        <p id="spinner-text">Loading...</p>
     </div>
     <div id="notification" class="notification hidden">
         <span>There was an error loading the error message.</span>
@@ -58,7 +63,7 @@
                 <p class="subtext stats">CPU Usage: {{ cpu }}%</p><br>
                 <p class="subtext stats">CPU Temp: {{ temp }}</p><br>
                 <p class="subtext stats">RAM Usage: {{ memory }}%</p><br>
-                <p class="subtext stats">Disk Usage: {{ (disk['used'] / (1024 ** 3)) | round(2) }} GB ({{ disk['percent'] }}%)</p><br>
+                <p class="subtext stats">Disk Usage: {{ (disk['used'] / (1024 ** 3)) | round(2) }} GB ({{ disk['percent'] }}%)</p>
             </div>
         </div>
         <div id="settings" class="tab-content">
@@ -67,9 +72,6 @@
             <div class="camera-setting-form">
                 <form class="cameraForm" action="/save_camera/{{ camera['index'] }}" method="POST">
                     <h3>Camera {{ camera['index'] }} - {{ camera['name'] }}</h3>
-                    <p>Resolution: {{ camera['frame_width'] }}x{{ camera['frame_height'] }}; FPS: {{ camera['fps'] }}
-                    </p>
-
                     <hr>
                     <div class="entry">
                         <h4>Camera Name</h4>
@@ -105,21 +107,18 @@
                     --->
 
                     <div class="entry">
-                        <h4>Record Duration</h4>
-                        <p class="subtext">How long to record each video before stopping and starting another</p>
-                        <input type="text" name="camera_duration" value="{{ camera['duration'] }}" required> minutes.
+                        <h4>Record Duration (minutes)</h4>
+                        <p class="subtext">How long to record each video before stopping and starting another (<b>in minutes</b>)</p>
+                        <input type="text" name="camera_duration" value="{{ camera['duration'] }}" required>
                     </div>
-                    
                     <div class="entry">
-                        <h4>Footage Age</h4>
-                        <p class="subtext">How long footage should be kept on the system before being removed</p>
-                        <input type="text" name="camera_age" value="{{ camera['age'] }}" required>minutes.
-                        <br>
+                        <h4>Footage Age (minutes)</h4>
+                        <p class="subtext">How long footage should be kept on the system before being removed (<b>in minutes</b>)</p>
                         <sub>One day is 1440 minutes - plan accordingly...</sub>
+                        <input type="text" name="camera_age" value="{{ camera['age'] }}" required>
+                        <br>
                     </div>
-                    <br>
-                    <br>
-                    <input onclick="notify('Camera settings are being saved...')" type="submit" value="Save">
+                    <input onclick="notify('Please wait while saving...', 'Wait!', 'alert-warning')" type="submit" value="Save">
                 </form>
             </div>
             <br><br>
@@ -205,6 +204,9 @@
         if ("{{ available_device_change }}" == "1") {
             notify("A change in available cameras has been detected.")
         }
+    </script>
+    <script>
+        close_overlay();
     </script>
 </body>
 
