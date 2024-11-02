@@ -40,4 +40,5 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Update script")
     parser.add_argument('--apply', action='store_true', help='Apply the updates')
     args = parser.parse_args()
+    print("HEY!")
     main(args.apply)
