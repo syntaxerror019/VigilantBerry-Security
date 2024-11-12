@@ -56,6 +56,8 @@ Run the following to start the venv and run the python script:
 This will start a webserver at the shown URL. Navigate to the URL in a web browser.
 You will be prompted to fill out the setup page. This is only necessary once.
 
+**Once you complete the setup, you will be prompted to log in. The credentials are the same as the login for your Raspberry Pi.**
+
 ---  
 
 ### Future Features 🌈
