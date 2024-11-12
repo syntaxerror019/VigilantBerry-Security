@@ -1,3 +1,5 @@
+# Miles Hilliard - https://mileshilliard.com/ | https://sntx.dev/
+
 import cv2, numpy, time, threading, os, logging, sys
 from flask import Flask, render_template, redirect, request, url_for, jsonify, Response, send_file, session, flash, g
 from datetime import datetime, timedelta
@@ -26,12 +28,6 @@ directory = app.root_path
 listed_cameras = []
 camera_frames = {}
 writers = {}
-
-# Dummy login credentials
-USER_CREDENTIALS = {
-    'username': 'user',
-    'password': 'password'
-}
 
 kill = False
 
