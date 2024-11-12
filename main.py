@@ -1,10 +1,3 @@
-##################################################################
-# Version 3.0 of CCTV Security System for RPi.
-# This version will store all data locally on the device.
-# This version also supports multiple cameras.
-##################################################################
-# Miles Hilliard - https://mileshilliard.com/ | https://sntx.dev/
-
 import cv2, numpy, time, threading, os, logging, sys
 from flask import Flask, render_template, redirect, request, url_for, jsonify, Response, send_file, session, flash, g
 from datetime import datetime, timedelta
