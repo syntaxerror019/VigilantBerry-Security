@@ -6,7 +6,7 @@
 # Miles Hilliard - https://mileshilliard.com/ | https://sntx.dev/
 
 import cv2, numpy, time, threading, os, logging, sys
-from flask import Flask, render_template, redirect, request, url_for, jsonify, Response, send_file
+from flask import Flask, render_template, redirect, request, url_for, jsonify, Response, send_file, session, flash, g
 from datetime import datetime, timedelta
 from functools import wraps
 from camera import Camera
@@ -16,10 +16,14 @@ import subprocess
 from pathlib import Path
 from datetime import timedelta
 import socket
+import getpass
 import signal
+import pam
 import re
 
 app = Flask(__name__)
+
+app.secret_key = "something_super_duper_secret"
 
 default_path = os.path.join(app.root_path, "static", "footage")
 snapshots = os.path.join(app.root_path, "static", "snapshots")
@@ -29,6 +33,12 @@ directory = app.root_path
 listed_cameras = []
 camera_frames = {}
 writers = {}
+
+# Dummy login credentials
+USER_CREDENTIALS = {
+    'username': 'user',
+    'password': 'password'
+}
 
 kill = False
 
@@ -290,7 +300,7 @@ def recording_function(cameras, objs, check_interval=5) -> None:
                     max_x, max_y = 0, 0
 
                     for contour in contours:
-                        if cv2.contourArea(contour) < 700:
+                        if cv2.contourArea(contour) < 1000:
                             continue
 
                         (x, y, w, h) = cv2.boundingRect(contour)
@@ -446,13 +456,46 @@ def virgin_check(f):
         return f(*args, **kwargs)
     return decorated_function
 
+def login_required(f):
+    """Decorator to protect routes that require login."""
+    @wraps(f)
+    def decorated_function(*args, **kwargs):
+        if not session.get('logged_in'):
+            flash('You need permission to proceed.', 'warning')
+            return redirect(url_for('login'))
+        return f(*args, **kwargs)
+    return decorated_function
+
 @app.route("/")
 @virgin_check
 def index():
     return redirect(url_for("dashboard"))
 
+@app.route('/login', methods=['GET', 'POST'])
+def login():
+    if request.method == 'POST':
+        username = request.form['username']
+        password = request.form['password']
+        
+        p = pam.pam()
+        if p.authenticate(username, password): # TODO: Use a more adjustable method for authentication
+            session['logged_in'] = True
+            flash('Successfully logged in.', 'success')
+            return redirect(url_for('dashboard'))
+        else:
+            flash('Invalid credentials. Please try again.', 'danger')
+    
+    return render_template('login.html')
+
+@app.route('/logout')
+def logout():
+    session.pop('logged_in', None)
+    flash('Successfully logged out.', 'info')
+    return redirect(url_for('index'))
+
 @app.route("/dashboard")
 @virgin_check
+@login_required
 def dashboard():
     global listed_cameras
 
@@ -496,6 +539,7 @@ def update():
 
 @app.route("/download/<string:camera_name>/<string:file_name>")
 @virgin_check
+@login_required
 def download(camera_name, file_name):
     file_path = os.path.join(LOCATION, camera_name, file_name)
     if os.path.exists(file_path):
@@ -505,42 +549,19 @@ def download(camera_name, file_name):
     
 @app.route("/view/<string:camera_name>/<string:file_name>")
 @virgin_check
+@login_required
 def view(camera_name, file_name):
     video_path = os.path.join(LOCATION, camera_name, file_name)
 
     if os.path.exists(video_path):
-        range_header = request.headers.get('Range', None)
-        if not range_header:
-            return send_file(video_path)
-
-        size = os.path.getsize(video_path)
-        byte1, byte2 = 0, None
-
-        m = re.search(r'bytes=(\d+)-(\d*)', range_header)
-        if m:
-            g = m.groups()
-            byte1 = int(g[0])
-            if g[1]:
-                byte2 = int(g[1])
-
-        byte2 = byte2 if byte2 is not None else size - 1
-        length = byte2 - byte1 + 1
-
-        with open(video_path, 'rb') as f:
-            f.seek(byte1)
-            data = f.read(length)
-
-        resp = Response(data, 206, mimetype='video/mp4', content_type='video/mp4')
-        resp.headers.add('Content-Range', f'bytes {byte1}-{byte2}/{size}')
-        resp.headers.add('Accept-Ranges', 'bytes')
-        resp.headers.add('Content-Length', str(length))
-        return resp
+        return send_file(video_path)
     
     else:
         return jsonify({"status": "error", "message": "File not found."}), 404
 
 @app.route('/video_feed/<int:camera_index>')
 @virgin_check
+@login_required
 def video_feed(camera_index):
     """Video streaming route. Returns the video feed for the given camera index."""
     def generate(camera_index):
@@ -631,8 +652,5 @@ def setup_web():
     return render_template("setup.html", cameras=cameras, default_location=LOCATION)
 
 if __name__ == "__main__":
-    if os.geteuid() != 0:
-        logging.critical("This script must be run as root!")
-        sys.exit(1)
     threading.Thread(target=app.run, kwargs={"host": "0.0.0.0", "port": 8080}).start() # TODO: Make this more elegant
     setup()
