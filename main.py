@@ -641,5 +641,5 @@ def setup_web():
     return render_template("setup.html", cameras=cameras, default_location=LOCATION)
 
 if __name__ == "__main__":
-    threading.Thread(target=app.run, kwargs={"host": "0.0.0.0", "port": 8080}).start() # TODO: Make this more elegant
+    threading.Thread(target=app.run, kwargs={"host": "0.0.0.0", "port": 5000}).start() # TODO: Make this more elegant
     setup()
